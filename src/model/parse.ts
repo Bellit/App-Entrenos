@@ -1,7 +1,8 @@
 /** Validación de jugadas leídas de fuera (navegador, carpeta o archivo importado). */
 import { DEFAULT_DURATION, LABEL_MAX, LIMITS, uid } from './common';
+import { MAX_BALLS } from './balls';
 import { sanitizeFrame } from './edit';
-import type { Action, Frame, Play, Player, Pt } from './types';
+import type { Action, BallState, Frame, Play, Player, Pt } from './types';
 import { isCategory, isMove, isTeam } from './types';
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -40,10 +41,16 @@ export function parsePlay(data: unknown): Play {
   if (data.players.length > LIMITS.players) throw bad(`tiene más de ${LIMITS.players} jugadores`);
 
   const players: Player[] = [];
+  // «balones extra» de la versión anterior (jugadores de tipo B): pasan a ser balones de verdad
+  const oldExtraBalls: string[] = [];
   const seen = new Set<string>();
   for (const raw of data.players) {
     if (!isObj(raw) || !isSafeId(raw.id) || seen.has(raw.id)) continue;
     seen.add(raw.id);
+    if (raw.team === 'B') {
+      oldExtraBalls.push(raw.id);
+      continue;
+    }
     players.push({ id: raw.id, team: isTeam(raw.team) ? raw.team : 'O', label: typeof raw.label === 'string' ? raw.label.slice(0, LABEL_MAX) : '' });
   }
   const ids = new Set(players.map((p) => p.id));
@@ -53,10 +60,22 @@ export function parsePlay(data: unknown): Play {
     const positions: Record<string, Pt> = {};
     for (const [id, pos] of Object.entries(raw.positions)) if (ids.has(id) && isPt(pos)) positions[id] = { x: pos.x, y: pos.y };
 
-    const rb = isObj(raw.ball) ? raw.ball : {};
-    const holder = typeof rb.holder === 'string' && positions[rb.holder] ? rb.holder : null;
-    const pos = isPt(rb.pos) ? { x: rb.pos.x, y: rb.pos.y } : holder ? positions[holder] : null;
-    if (!pos) throw bad(`fotograma ${k + 1} sin balón`);
+    // balones: lista nueva (`balls`) o, en jugadas antiguas y de ATO, un solo `ball`
+    const balls: BallState[] = [];
+    const readBall = (rb: unknown, fallbackId: string) => {
+      if (!isObj(rb) || balls.length >= MAX_BALLS) return;
+      const id = isSafeId(rb.id) ? rb.id : fallbackId;
+      if (balls.some((b) => b.id === id)) return;
+      const holder = typeof rb.holder === 'string' && positions[rb.holder] ? rb.holder : null;
+      const pos = isPt(rb.pos) ? { x: rb.pos.x, y: rb.pos.y } : holder ? positions[holder] : null;
+      if (pos) balls.push({ id, holder, pos });
+    };
+    if (Array.isArray(raw.balls)) raw.balls.forEach((rb, i) => readBall(rb, `b${i + 1}`));
+    else readBall(raw.ball, 'ball');
+    for (const id of oldExtraBalls) {
+      const p = raw.positions[id];
+      if (isPt(p)) readBall({ id, holder: null, pos: p }, id);
+    }
 
     const actions: Action[] = [];
     for (const a of Array.isArray(raw.actions) ? raw.actions : []) {
@@ -76,19 +95,15 @@ export function parsePlay(data: unknown): Play {
     const f: Frame = {
       id: str(raw.id, uid()),
       positions,
-      ball: { holder, pos },
+      balls,
       actions,
       duration: isNum(raw.duration) ? Math.min(4, Math.max(0.6, raw.duration)) : DEFAULT_DURATION,
       note: typeof raw.note === 'string' ? raw.note.slice(0, 120) : '',
     };
-    sanitizeFrame(f);
-    // como mucho un pase o un tiro, y un movimiento por jugador
-    let ballAction = false;
+    // un movimiento por jugador; de pases y tiros se encarga sanitizeFrame (uno por jugador con balón)
     const moved = new Set<string>();
-    f.actions = f.actions.filter((a) => {
-      if (isMove(a)) return moved.has(a.playerId) ? false : (moved.add(a.playerId), true);
-      return ballAction ? false : (ballAction = true);
-    });
+    f.actions = f.actions.filter((a) => (isMove(a) ? (moved.has(a.playerId) ? false : (moved.add(a.playerId), true)) : true));
+    sanitizeFrame(f);
     return f;
   });
 

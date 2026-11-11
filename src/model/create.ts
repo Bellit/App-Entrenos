@@ -27,7 +27,7 @@ export function newPlay(name = 'Nueva jugada', court: CourtType = 'half', format
     name,
     court,
     players,
-    frames: [newFrame(positions, { holder: players[0].id, pos: positions[players[0].id] })],
+    frames: [newFrame(positions, [{ id: uid(), holder: players[0].id, pos: positions[players[0].id] }])],
     createdAt: now,
     updatedAt: now,
   };
@@ -35,6 +35,6 @@ export function newPlay(name = 'Nueva jugada', court: CourtType = 'half', format
   return play;
 }
 
-export function newFrame(positions: Record<string, Pt>, ball: BallState): Frame {
-  return { id: uid(), positions: clone(positions), ball: clone(ball), actions: [], duration: DEFAULT_DURATION, note: '' };
+export function newFrame(positions: Record<string, Pt>, balls: BallState[]): Frame {
+  return { id: uid(), positions: clone(positions), balls: clone(balls), actions: [], duration: DEFAULT_DURATION, note: '' };
 }

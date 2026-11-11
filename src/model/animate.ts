@@ -1,4 +1,4 @@
-/** Animación: dónde está cada jugador y el balón en cada instante, y qué líneas dibujar. */
+/** Animación: dónde está cada jugador y cada balón en cada instante, y qué líneas dibujar. */
 import { BALL_OFFSET, nearestRim } from './court';
 import { RELEASE_T } from './common';
 import { easeInOut, lerp, pathFor, Polyline } from './geometry';
@@ -6,9 +6,16 @@ import { moveOf, nextState, passOf, playerById, sameBall, shotOf } from './query
 import type { Action, BallState, Play, Pt, Team } from './types';
 import { isMove } from './types';
 
+/** Un balón dibujado: dónde está y su tamaño (crece un poco en el aire, en pases y tiros). */
+export interface SceneBall {
+  id: string;
+  pos: Pt;
+  scale: number;
+}
+
 export interface SceneState {
   positions: Record<string, Pt>;
-  ball: { pos: Pt; scale: number } | null;
+  balls: SceneBall[];
 }
 
 const withOffset = (p: Pt): Pt => ({ x: p.x + BALL_OFFSET.x, y: p.y + BALL_OFFSET.y });
@@ -45,7 +52,7 @@ function ballPosOf(ball: BallState, positions: Record<string, Pt>): Pt {
   return ball.pos;
 }
 
-/** Estado de la escena en el instante t (0-1) de la transición del fotograma k. */
+/** Estado de la escena en el instante t (0-1) de la transición del fotograma k. Cada balón va por su cuenta. */
 export function stateAt(play: Play, k: number, t: number): SceneState {
   const f = play.frames[k];
   const ns = nextState(play, k);
@@ -54,40 +61,34 @@ export function stateAt(play: Play, k: number, t: number): SceneState {
     const pos = playerAt(play, k, p.id, t, ns);
     if (pos) positions[p.id] = pos;
   }
-  const pass = passOf(f);
-  const shot = shotOf(f);
-  let ball: SceneState['ball'] = null;
+  const u = (t - RELEASE_T) / (1 - RELEASE_T); // avance del balón en el aire, tras soltarlo
 
-  if (pass && positions[pass.from] && positions[pass.to]) {
-    if (t < RELEASE_T) ball = { pos: withOffset(positions[pass.from]), scale: 1 };
-    else {
+  const balls = f.balls.map((b): SceneBall => {
+    const pass = b.holder ? passOf(f, b.holder) : undefined;
+    const shot = b.holder ? shotOf(f, b.holder) : undefined;
+    if (pass && positions[pass.from] && positions[pass.to]) {
+      if (t < RELEASE_T) return { id: b.id, pos: withOffset(positions[pass.from]), scale: 1 };
       const from = withOffset(playerAt(play, k, pass.from, RELEASE_T, ns)!);
-      const u = (t - RELEASE_T) / (1 - RELEASE_T);
-      ball = { pos: lerp(from, withOffset(positions[pass.to]), u), scale: 1 + 0.15 * Math.sin(Math.PI * u) };
+      return { id: b.id, pos: lerp(from, withOffset(positions[pass.to]), u), scale: 1 + 0.15 * Math.sin(Math.PI * u) };
     }
-  } else if (shot && positions[shot.playerId]) {
-    if (t < RELEASE_T) ball = { pos: withOffset(positions[shot.playerId]), scale: 1 };
-    else {
+    if (shot && positions[shot.playerId]) {
+      if (t < RELEASE_T) return { id: b.id, pos: withOffset(positions[shot.playerId]), scale: 1 };
       const from = withOffset(playerAt(play, k, shot.playerId, RELEASE_T, ns)!);
       const rim = nearestRim(play.court, f.positions[shot.playerId]);
-      const u = (t - RELEASE_T) / (1 - RELEASE_T);
-      ball = { pos: lerp(from, rim, u), scale: 1 + 0.7 * Math.sin(Math.PI * u) };
+      return { id: b.id, pos: lerp(from, rim, u), scale: 1 + 0.7 * Math.sin(Math.PI * u) };
     }
-  } else {
-    if (sameBall(f.ball, ns.ball)) ball = { pos: ballPosOf(f.ball, positions), scale: 1 };
-    else {
-      const from = ballPosOf(f.ball, f.positions);
-      const to = ballPosOf(ns.ball, ns.positions);
-      ball = { pos: lerp(from, to, easeInOut(t)), scale: 1 };
-    }
-  }
-  return { positions, ball };
+    // sin pase ni tiro: sigue a su jugador o, si cambia de sitio entre fotogramas, se desliza
+    const nb = ns.balls.find((x) => x.id === b.id);
+    if (!nb || sameBall(b, nb)) return { id: b.id, pos: ballPosOf(b, positions), scale: 1 };
+    return { id: b.id, pos: lerp(ballPosOf(b, f.positions), ballPosOf(nb, ns.positions), easeInOut(t)), scale: 1 };
+  });
+  return { positions, balls };
 }
 
 /** Estado estático al inicio del fotograma k (para edición). */
 export function frameScene(play: Play, k: number): SceneState {
   const f = play.frames[k];
-  return { positions: f.positions, ball: { pos: ballPosOf(f.ball, f.positions), scale: 1 } };
+  return { positions: f.positions, balls: f.balls.map((b) => ({ id: b.id, pos: ballPosOf(b, f.positions), scale: 1 })) };
 }
 
 // ---------------------------------------------------------------------------

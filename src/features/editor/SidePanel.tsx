@@ -8,7 +8,7 @@ import { IconTrash } from '../../ui/Icons';
 import { PanelSection as Section } from '../../ui/PanelSection';
 import './SidePanel.css';
 
-const TEAM_NAMES: Record<Team, string> = { O: 'Atacante', D: 'Defensor', C: 'Cono', K: 'Entrenador', B: 'Balón extra' };
+const TEAM_NAMES: Record<Team, string> = { O: 'Atacante', D: 'Defensor', C: 'Cono', K: 'Entrenador' };
 
 const ACTION_NAMES: Record<string, string> = {
   move: 'Desplazamiento',
@@ -57,6 +57,8 @@ export function SidePanel({ head, extra, onClose }: { head?: React.ReactNode; ex
   const player = selection?.kind === 'player' ? P.playerById(play, selection.id) : undefined;
   const action = selection?.kind === 'action' ? f.actions.find((a) => a.id === selection.id) : undefined;
   const actor = action ? P.playerById(play, action.type === 'pass' ? action.from : action.playerId) : undefined;
+  const ball = selection?.kind === 'ball' ? P.ballById(f, selection.id) : undefined;
+  const ballHolder = ball?.holder ? P.playerById(play, ball.holder) : undefined;
 
   return (
     <aside className="side" id="panel-lateral" aria-label="Propiedades">
@@ -74,7 +76,7 @@ export function SidePanel({ head, extra, onClose }: { head?: React.ReactNode; ex
         <section className="panel selected">
           <h2>{TEAM_NAMES[player.team]}</h2>
           <div className="panel-body">
-            {player.team !== 'C' && player.team !== 'B' && (
+            {player.team !== 'C' && (
             <label className="field">
               <span>Etiqueta</span>
               <input
@@ -100,7 +102,21 @@ export function SidePanel({ head, extra, onClose }: { head?: React.ReactNode; ex
             </label>
             )}
             <button className="btn danger" onClick={() => { edit((p) => P.removePlayer(p, player.id)); select(null); }}>
-              <IconTrash /> {player.team === 'C' || player.team === 'B' || player.team === 'K' ? 'Quitar' : 'Quitar jugador'}
+              <IconTrash /> {player.team === 'C' || player.team === 'K' ? 'Quitar' : 'Quitar jugador'}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {ball && (
+        <section className="panel selected">
+          <h2>
+            Balón {ballHolder ? <small>de {ballHolder.label}</small> : <small>suelto</small>}
+          </h2>
+          <div className="panel-body">
+            <p className="muted">Arrástralo sobre un jugador para dárselo, o déjalo suelto en la pista. El jugador que lo lleva puede botar, pasar o tirar.</p>
+            <button className="btn danger" onClick={() => { edit((p) => P.removeBall(p, ball.id)); select(null); }}>
+              <IconTrash /> Quitar balón
             </button>
           </div>
         </section>
@@ -117,7 +133,7 @@ export function SidePanel({ head, extra, onClose }: { head?: React.ReactNode; ex
                 <span>Tipo</span>
                 <select value={action.type} onChange={(e) => edit((p) => P.setActionType(p, frame, action.id, e.target.value as MoveType))}>
                   <option value="move">Desplazamiento</option>
-                  <option value="dribble" disabled={f.ball.holder !== action.playerId}>Conducción</option>
+                  <option value="dribble" disabled={!P.hasBall(f, action.playerId)}>Conducción</option>
                   <option value="screen">Bloqueo</option>
                 </select>
               </label>

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as P from './play';
 import { holdsBall } from './types';
 
-describe('objetos de pista (cono, entrenador, balón extra)', () => {
+describe('objetos de pista (cono y entrenador)', () => {
   it('se añaden con posición en todos los fotogramas desde el que se indique', () => {
     const play = P.newPlay();
     P.addFrameAfter(play, 0);
@@ -13,11 +13,10 @@ describe('objetos de pista (cono, entrenador, balón extra)', () => {
     expect(play.frames[1].positions[coach]).toBeDefined();
   });
 
-  it('conos y balones no llevan etiqueta; el entrenador es «E»', () => {
+  it('los conos no llevan etiqueta; el entrenador es «E»', () => {
     const play = P.newPlay();
     const label = (id: string) => P.playerById(play, id)!.label;
     expect(label(P.addPlayer(play, 'C'))).toBe('');
-    expect(label(P.addPlayer(play, 'B'))).toBe('');
     expect(label(P.addPlayer(play, 'K'))).toBe('E');
   });
 
@@ -25,13 +24,12 @@ describe('objetos de pista (cono, entrenador, balón extra)', () => {
     const play = P.newPlay();
     const before = P.unmarked(play).length;
     P.addPlayer(play, 'C');
-    P.addPlayer(play, 'B');
     expect(P.unmarked(play).length).toBe(before);
   });
 
   it('solo atacantes y defensores pueden tener el balón', () => {
     expect(['O', 'D'].every((t) => holdsBall(t as 'O' | 'D'))).toBe(true);
-    expect(['C', 'K', 'B'].some((t) => holdsBall(t as 'C' | 'K' | 'B'))).toBe(false);
+    expect(['C', 'K'].some((t) => holdsBall(t as 'C' | 'K'))).toBe(false);
   });
 
   it('sobreviven a guardar y leer, y un tipo desconocido se vuelve atacante', () => {

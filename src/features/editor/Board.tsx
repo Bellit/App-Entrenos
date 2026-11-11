@@ -30,13 +30,13 @@ export function Board() {
   const haloR = (useLayout().touch ? TOUCH_REACH : MOUSE_REACH).halo;
   const palette = usePalette();
   const [draft, setDraft] = useState<Drawable | null>(null);
-  const [ballDrag, setBallDrag] = useState<Pt | null>(null);
+  const [ballDrag, setBallDrag] = useState<{ id: string; pos: Pt } | null>(null);
 
   const vb = viewBox(play.court);
   const f = play.frames[frame];
   const animK = playhead ? playhead.k : frame;
   const scene = playhead ? P.stateAt(play, playhead.k, playhead.t) : P.frameScene(play, frame);
-  if (ballDrag && scene.ball) scene.ball = { pos: ballDrag, scale: 1 };
+  if (ballDrag) scene.balls = scene.balls.map((b) => (b.id === ballDrag.id ? { ...b, pos: ballDrag.pos } : b));
   const actions = showLines ? P.drawables(play, animK) : [];
   const ghost = !playhead && showGhost && frame > 0 ? { scene: P.frameScene(play, frame - 1), actions: P.drawables(play, frame - 1) } : null;
   const selectedId = selection?.id ?? null;
@@ -71,7 +71,7 @@ export function Board() {
     const el = (e.target as Element).closest('[data-kind]');
     const hit: Hit = { kind: (el?.getAttribute('data-kind') as Hit['kind']) ?? null, id: el?.getAttribute('data-id') ?? '' };
     reach.current = e.pointerType === 'mouse' ? MOUSE_REACH : TOUCH_REACH;
-    const fx = pressAt(play, frame, tool, hit, toSvg(e), scene.ball?.pos, reach.current);
+    const fx = pressAt(play, frame, tool, hit, toSvg(e), scene.balls, reach.current);
     drag.current = fx.drag ?? null;
     apply(fx);
     // seguir el puntero aunque salga de la pista; si el navegador no puede (puntero ya soltado), se sigue igual

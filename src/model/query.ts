@@ -6,13 +6,29 @@ import { isMove } from './types';
 
 export const moveOf = (f: Frame, pid: string) =>
   f.actions.find((a): a is MoveAction => isMove(a) && a.playerId === pid);
-export const passOf = (f: Frame) => f.actions.find((a): a is PassAction => a.type === 'pass');
-export const shotOf = (f: Frame) => f.actions.find((a): a is ShotAction => a.type === 'shot');
+/** Pase que hace `from` en este fotograma (cada jugador hace como mucho uno). */
+export const passOf = (f: Frame, from: string) => f.actions.find((a): a is PassAction => a.type === 'pass' && a.from === from);
+/** Tiro de `pid` en este fotograma. */
+export const shotOf = (f: Frame, pid: string) => f.actions.find((a): a is ShotAction => a.type === 'shot' && a.playerId === pid);
 export const playerById = (play: Play, id: string) => play.players.find((p) => p.id === id);
+/** El balón que lleva un jugador, si lleva alguno. */
+export const ballOf = (f: Frame, pid: string) => f.balls.find((b) => b.holder === pid);
+export const ballById = (f: Frame, id: string) => f.balls.find((b) => b.id === id);
+/** ¿Lleva balón este jugador? */
+export const hasBall = (f: Frame, pid: string) => f.balls.some((b) => b.holder === pid);
 
-interface FrameState {
+export interface FrameState {
   positions: Record<string, Pt>;
-  ball: BallState;
+  balls: BallState[];
+}
+
+/** Dónde acaba un balón al terminar las acciones del fotograma: pasado, tirado o con su jugador. */
+function ballAfter(play: Play, f: Frame, b: BallState, positions: Record<string, Pt>): BallState {
+  if (!b.holder) return { ...b };
+  const pass = passOf(f, b.holder);
+  if (pass && positions[pass.to]) return { id: b.id, holder: pass.to, pos: positions[pass.to] };
+  if (shotOf(f, b.holder)) return { id: b.id, holder: null, pos: nearestRim(play.court, f.positions[b.holder] ?? b.pos) };
+  return { ...b, pos: positions[b.holder] ?? b.pos };
 }
 
 /** Estado al terminar las acciones del fotograma k. */
@@ -20,21 +36,14 @@ export function endState(play: Play, k: number): FrameState {
   const f = play.frames[k];
   const positions = { ...f.positions };
   for (const a of f.actions) if (isMove(a)) positions[a.playerId] = a.points[a.points.length - 1];
-  let ball: BallState = { ...f.ball };
-  const pass = passOf(f);
-  const shot = shotOf(f);
-  if (pass) ball = { holder: pass.to, pos: positions[pass.to] };
-  else if (shot) ball = { holder: null, pos: nearestRim(play.court, f.positions[shot.playerId]) };
-  else if (ball.holder) ball.pos = positions[ball.holder] ?? ball.pos;
-  return { positions, ball };
+  return { positions, balls: f.balls.map((b) => ballAfter(play, f, b, positions)) };
 }
 
 /** Estado de destino de la transición k → k+1. */
 export function nextState(play: Play, k: number): FrameState {
   const n = play.frames[k + 1];
-  return n ? { positions: n.positions, ball: n.ball } : endState(play, k);
+  return n ? { positions: n.positions, balls: n.balls } : endState(play, k);
 }
 
-/** Mismo balón: lo tiene el mismo jugador o, si está suelto, en el mismo sitio. */
+/** Mismo estado de balón: lo tiene el mismo jugador o, si está suelto, en el mismo sitio. */
 export const sameBall = (a: BallState, b: BallState) => a.holder === b.holder && (a.holder !== null || near(a.pos, b.pos));
-

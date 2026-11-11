@@ -21,7 +21,7 @@ const Thumb = memo(
   (a, b) => a.k === b.k && a.sig === b.sig,
 );
 
-const thumbSig = (play: Play, k: number) => JSON.stringify([play.court, play.players, play.frames[k], play.frames[k + 1]?.positions, play.frames[k + 1]?.ball]);
+const thumbSig = (play: Play, k: number) => JSON.stringify([play.court, play.players, play.frames[k], play.frames[k + 1]?.positions, play.frames[k + 1]?.balls]);
 
 /** Barra de progreso: además de informar, se puede pulsar o arrastrar para ir a un instante. */
 function Progress({ play, elapsed, total }: { play: Play; elapsed: number; total: number }) {

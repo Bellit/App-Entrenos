@@ -13,7 +13,7 @@ import type { Selection, Tool } from '../../store';
 
 export type Drag =
   | { mode: 'player'; base: Play; pid: string; offset: Pt }
-  | { mode: 'ball'; offset: Pt }
+  | { mode: 'ball'; id: string; offset: Pt }
   | { mode: 'handle'; base: Play; actionId: string }
   /**
    * `smart`: dibujo empezado desde el anillo del jugador con la herramienta Seleccionar.
@@ -42,9 +42,14 @@ export interface Effect {
   commit?: Play;
   /** Línea provisional mientras se dibuja (`null` = quitarla). */
   draft?: Drawable | null;
-  /** Posición provisional del balón mientras se arrastra (`null` = soltarlo). */
-  ballAt?: Pt | null;
+  /** Posición provisional del balón que se arrastra (`null` = soltarlo). */
+  ballAt?: { id: string; pos: Pt } | null;
 }
+
+/** Mensajes al intentar algo que necesita balón (o recibirlo). */
+const NEEDS_BALL = 'Esa acción solo la puede hacer un jugador con balón.';
+const NO_BALL = 'Nadie tiene balón en este fotograma. Arrastra un balón a un jugador.';
+const HAS_BALL = 'Ese jugador ya tiene un balón: primero tiene que pasarlo o tirarlo.';
 
 export const HINTS: Record<Tool, string> = {
   select: 'Arrastra un jugador para moverlo, o desde su anillo para dibujar su carrera (bote si lleva el balón; suelta sobre un compañero para pasar).',
@@ -91,26 +96,26 @@ function playerNear(play: Play, k: number, p: Pt, near: number, exclude?: string
   return best;
 }
 
-/** En un dibujo inteligente del jugador con balón, el compañero sobre el que se suelta (= pase). */
+/** En un dibujo inteligente de un jugador con balón, el compañero sobre el que se suelta (= pase). */
 function smartPassTarget(play: Play, k: number, d: Drag, p: Pt, reach: Reach): string | null {
-  if (d.mode !== 'draw' || !d.smart || d.pid !== play.frames[k].ball.holder) return null;
+  if (d.mode !== 'draw' || !d.smart || !P.hasBall(play.frames[k], d.pid)) return null;
   const to = playerNear(play, k, p, reach.near, d.pid);
-  return to && teamOf(play, to) === teamOf(play, d.pid) ? to : null;
+  return to && teamOf(play, to) === teamOf(play, d.pid) && P.canReceive(play.frames[k], to) ? to : null;
 }
 
-/** Pulsar sobre la pista. `ballPos`: dónde se dibuja el balón ahora; `reach`: márgenes de ratón o de dedo. */
-export function pressAt(play: Play, k: number, tool: Tool, hit: Hit, p: Pt, ballPos?: Pt, reach: Reach = MOUSE_REACH): Effect {
+/** Pulsar sobre la pista. `balls`: dónde se dibuja cada balón ahora; `reach`: márgenes de ratón o de dedo. */
+export function pressAt(play: Play, k: number, tool: Tool, hit: Hit, p: Pt, balls: { id: string; pos: Pt }[] = [], reach: Reach = MOUSE_REACH): Effect {
   const f = play.frames[k];
-  const holder = f.ball.holder;
 
   if (tool === 'select') {
     if (hit.kind === 'handle') return { drag: { mode: 'handle', base: play, actionId: hit.id } };
-    if (hit.kind === 'ball' && ballPos) return { select: null, drag: { mode: 'ball', offset: { x: ballPos.x - p.x, y: ballPos.y - p.y } } };
+    const ball = hit.kind === 'ball' ? balls.find((b) => b.id === hit.id) : undefined;
+    if (ball) return { select: { kind: 'ball', id: ball.id }, drag: { mode: 'ball', id: ball.id, offset: { x: ball.pos.x - p.x, y: ball.pos.y - p.y } } };
     if (hit.kind === 'player') {
       const pos = f.positions[hit.id];
       const select: Selection = { kind: 'player', id: hit.id };
-      // desde el anillo: dibujar carrera (o bote si lleva el balón); soltar en un compañero = pase
-      if (dist(pos, p) > PLAYER_R + reach.ring) return { select, drag: { mode: 'draw', pid: hit.id, type: hit.id === holder ? 'dribble' : 'move', pts: [pos], smart: true, from: p } };
+      // desde el anillo: dibujar carrera (o bote si lleva balón); soltar en un compañero = pase
+      if (dist(pos, p) > PLAYER_R + reach.ring) return { select, drag: { mode: 'draw', pid: hit.id, type: P.hasBall(f, hit.id) ? 'dribble' : 'move', pts: [pos], smart: true, from: p } };
       return { select, drag: { mode: 'player', base: play, pid: hit.id, offset: { x: pos.x - p.x, y: pos.y - p.y } } };
     }
     if (hit.kind === 'action') return { select: { kind: 'action', id: hit.id } };
@@ -119,8 +124,8 @@ export function pressAt(play: Play, k: number, tool: Tool, hit: Hit, p: Pt, ball
 
   const pid = playerNear(play, k, p, reach.near);
   if (!pid) return { notify: HINTS[tool] };
-  if ((tool === 'dribble' || tool === 'pass' || tool === 'shot') && pid !== holder)
-    return { notify: holder ? 'Esa acción solo la puede hacer el jugador que tiene el balón.' : 'Nadie tiene el balón en este fotograma. Arrástralo a un jugador.' };
+  if ((tool === 'dribble' || tool === 'pass' || tool === 'shot') && !P.hasBall(f, pid))
+    return { notify: f.balls.some((b) => b.holder) ? NEEDS_BALL : NO_BALL };
   if (tool === 'shot') return { edit: (pl) => P.setShot(pl, k, pid) };
   const start = f.positions[pid];
   if (tool === 'pass') return { drag: { mode: 'pass', pid, start }, draft: { id: 'draft', type: 'pass', team: teamOf(play, pid), pts: [start, p] } };
@@ -136,7 +141,7 @@ export function dragTo(play: Play, k: number, d: Drag, p: Pt, reach: Reach = MOU
       return { preview: { base: d.base, fn: (pl) => P.movePlayer(pl, k, d.pid, pos) } };
     }
     case 'ball':
-      return { ballAt: { x: p.x + d.offset.x, y: p.y + d.offset.y } };
+      return { ballAt: { id: d.id, pos: { x: p.x + d.offset.x, y: p.y + d.offset.y } } };
     case 'handle':
       return { preview: { base: d.base, fn: (pl) => P.setActionEnd(pl, k, d.actionId, p) } };
     case 'draw': {
@@ -163,7 +168,10 @@ export function releaseAt(play: Play, k: number, d: Drag, p: Pt, reach: Reach = 
     case 'ball': {
       const pos = { x: p.x + d.offset.x, y: p.y + d.offset.y };
       const to = playerNear(play, k, pos, reach.near);
-      return { ballAt: null, edit: (pl) => P.setBall(pl, k, to ? { holder: to, pos: f.positions[to] } : { holder: null, pos }) };
+      // soltado sobre un jugador: se queda con él, salvo que ya lleve otro balón
+      const taken = !!to && f.balls.some((b) => b.holder === to && b.id !== d.id);
+      const ball = to && !taken ? { holder: to, pos: f.positions[to] } : { holder: null, pos };
+      return { ballAt: null, edit: (pl) => P.setBall(pl, k, d.id, ball), ...(taken ? { notify: 'Ese jugador ya tiene un balón; este se queda suelto a su lado.' } : {}) };
     }
     case 'draw': {
       const mate = smartPassTarget(play, k, d, p, reach);
@@ -178,6 +186,7 @@ export function releaseAt(play: Play, k: number, d: Drag, p: Pt, reach: Reach = 
       const to = playerNear(play, k, p, reach.near, d.pid);
       if (!to) return { notify: 'Suelta el pase encima de un compañero.' };
       if (teamOf(play, to) !== teamOf(play, d.pid)) return { notify: 'Solo se puede pasar a un compañero del mismo equipo.' };
+      if (!P.canReceive(f, to)) return { notify: HAS_BALL };
       return { edit: (pl) => P.setPass(pl, k, d.pid, to) };
     }
   }

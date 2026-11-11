@@ -163,7 +163,6 @@ export function PlayerShape({
       {team === 'D' && <rect x={-PLAYER_R} y={-PLAYER_R} width={PLAYER_R * 2} height={PLAYER_R * 2} rx={1.6} fill={look.fill} stroke={look.stroke} strokeWidth={sw} />}
       {team === 'C' && <ConeShape sw={sw} />}
       {team === 'K' && <circle r={PLAYER_R} fill={COACH.fill} stroke={COACH.stroke} strokeWidth={sw} />}
-      {team === 'B' && <ExtraBall />}
       {(team === 'O' || team === 'D' || team === 'K') && (
         <text textAnchor="middle" dy="0.36em" fontFamily={FONT} fontWeight={700} fontSize={fs} fill={team === 'K' ? '#fff' : look.ink} transform={rotate ? `rotate(${-rotate})` : undefined} style={{ userSelect: 'none' }}>
           {label}
@@ -188,24 +187,13 @@ function ConeShape({ sw }: { sw: number }) {
   );
 }
 
-/** Balón suelto adicional (los de reserva en un ejercicio de tiro, por ejemplo). */
-function ExtraBall() {
-  const C = usePalette();
-  const r = BALL_R * 1.5;
-  return (
-    <g>
-      <circle r={PLAYER_R} fill="transparent" />
-      <circle r={r} fill={C.ball} stroke={C.ballLine} strokeWidth={0.4} />
-      <path d={`M${-r} 0 H${r} M0 ${-r} V${r} M${-r * 0.7} ${-r * 0.7} Q0 0 ${-r * 0.7} ${r * 0.7} M${r * 0.7} ${-r * 0.7} Q0 0 ${r * 0.7} ${r * 0.7}`} stroke={C.ballLine} strokeWidth={0.3} fill="none" />
-    </g>
-  );
-}
-
-function BallShape({ pos, scale = 1, selected = false, interactive = false }: { pos: Pt; scale?: number; selected?: boolean; interactive?: boolean }) {
+/** Un balón. Todos se dibujan igual; al editar llevan una zona de agarre invisible algo mayor. */
+function BallShape({ id, pos, scale = 1, selected = false, interactive = false }: { id: string; pos: Pt; scale?: number; selected?: boolean; interactive?: boolean }) {
   const C = usePalette();
   const r = BALL_R * scale;
   return (
-    <g transform={`translate(${pos.x.toFixed(2)} ${pos.y.toFixed(2)})`} data-kind={interactive ? 'ball' : undefined} style={interactive ? { cursor: 'grab' } : undefined}>
+    <g transform={`translate(${pos.x.toFixed(2)} ${pos.y.toFixed(2)})`} data-kind={interactive ? 'ball' : undefined} data-id={interactive ? id : undefined} style={interactive ? { cursor: 'grab' } : undefined}>
+      {interactive && <circle r={BALL_R + 1.2} fill="transparent" />}
       {selected && <circle r={r + 1.4} fill="none" stroke={C.select} strokeWidth={0.7} />}
       <circle r={r} fill={C.ball} stroke={C.ballLine} strokeWidth={0.35} />
       <path d={`M${-r} 0 H${r} M0 ${-r} V${r} M${-r * 0.7} ${-r * 0.7} Q0 0 ${-r * 0.7} ${r * 0.7} M${r * 0.7} ${-r * 0.7} Q0 0 ${r * 0.7} ${r * 0.7}`} stroke={C.ballLine} strokeWidth={0.25} fill="none" />
@@ -250,7 +238,9 @@ export function SceneContent({ play, scene, actions, actionOpacity = 1, ghost, s
             <PlayerShape key={p.id} id={p.id} team={p.team} label={p.label} pos={scene.positions[p.id]} selected={p.id === selectedId} halo={interactive} haloR={haloR} />
           ),
       )}
-      {scene.ball && <BallShape pos={scene.ball.pos} scale={scene.ball.scale} interactive={interactive} selected={selectedId === 'ball'} />}
+      {scene.balls.map((b) => (
+        <BallShape key={b.id} id={b.id} pos={b.pos} scale={b.scale} interactive={interactive} selected={selectedId === b.id} />
+      ))}
       {children}
     </>
   );

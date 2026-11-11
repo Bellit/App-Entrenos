@@ -5,11 +5,12 @@ export interface Pt {
 
 /**
  * Qué es cada elemento de la pista. O = atacante, D = defensor; los demás son «objetos»:
- * C = cono, K = entrenador, B = balón extra. Todos tienen posición en cada fotograma y se
- * pueden mover y arrastrar igual que un jugador, pero solo O y D pueden tener el balón o pasarlo.
+ * C = cono, K = entrenador. Todos tienen posición en cada fotograma y se pueden mover y
+ * arrastrar igual que un jugador, pero solo O y D pueden tener un balón o pasarlo.
+ * (Antes existía «B», balón extra como objeto; al leer datos antiguos se convierte en balón de verdad.)
  */
-export type Team = 'O' | 'D' | 'C' | 'K' | 'B';
-export const TEAMS: readonly Team[] = ['O', 'D', 'C', 'K', 'B'];
+export type Team = 'O' | 'D' | 'C' | 'K';
+export const TEAMS: readonly Team[] = ['O', 'D', 'C', 'K'];
 export const isTeam = (v: unknown): v is Team => TEAMS.includes(v as Team);
 /** ¿Puede tener el balón (y por tanto botar, pasar o tirar)? */
 export const holdsBall = (t: Team) => t === 'O' || t === 'D';
@@ -46,8 +47,13 @@ export interface ShotAction {
 
 export type Action = MoveAction | PassAction | ShotAction;
 
+/**
+ * Un balón en un fotograma. El mismo balón conserva su `id` en todos los fotogramas,
+ * así la animación sabe qué balón va de dónde a dónde.
+ */
 export interface BallState {
-  /** Jugador que tiene el balón, o null si está suelto. */
+  id: string;
+  /** Jugador que tiene el balón, o null si está suelto. Un jugador lleva como mucho un balón. */
   holder: string | null;
   /** Posición del balón cuando está suelto. */
   pos: Pt;
@@ -57,7 +63,8 @@ export interface Frame {
   id: string;
   /** Posiciones al inicio del fotograma. */
   positions: Record<string, Pt>;
-  ball: BallState;
+  /** Balones al inicio del fotograma (puede haber varios, o ninguno). */
+  balls: BallState[];
   /** Acciones que llevan de este fotograma al siguiente. */
   actions: Action[];
   /** Duración de la transición en segundos. */

@@ -1,5 +1,5 @@
 import * as P from '../../model/play';
-import type { Team } from '../../model/types';
+import { holdsBall, type Team } from '../../model/types';
 import { useStore, type Tool } from '../../store';
 import { IconDribble, IconMove, IconPass, IconPlus, IconScreen, IconSelect, IconShot } from '../../ui/Icons';
 import { Menu } from '../../ui/Menu';
@@ -37,6 +37,23 @@ export function Toolbar({ variant = 'column' }: { variant?: 'column' | 'bar' }) 
     if (frame > 0) notify(`El jugador entra en el fotograma ${frame + 1}; en los anteriores no aparece.`);
   };
 
+  /** Añade un balón: al jugador seleccionado si no lleva ninguno, o suelto en la pista. */
+  const selection = useStore((s) => s.selection);
+  const addBall = () => {
+    const f = play.frames[frame];
+    if (f.balls.length >= P.MAX_BALLS) return notify(`Como mucho caben ${P.MAX_BALLS} balones.`);
+    const sel = selection?.kind === 'player' ? P.playerById(play, selection.id) : undefined;
+    const holder = sel && holdsBall(sel.team) && !P.hasBall(f, sel.id) ? sel.id : null;
+    const half = play.court === 'half';
+    // suelto: en la línea de fondo, uno al lado del otro
+    const pos = { x: 118 - f.balls.filter((b) => !b.holder).length * 5, y: half ? 132 : 134 };
+    let id = '';
+    edit((p) => (id = P.addBall(p, frame, holder, pos)));
+    if (id) select({ kind: 'ball', id });
+    if (!holder) notify('Balón añadido. Arrástralo sobre un jugador para dárselo.');
+    else if (frame > 0) notify(`El balón aparece en el fotograma ${frame + 1}.`);
+  };
+
   if (variant === 'bar')
     return (
       <nav className="toolbar bar" aria-label="Herramientas">
@@ -59,7 +76,7 @@ export function Toolbar({ variant = 'column' }: { variant?: 'column' | 'bar' }) 
             { label: 'Defensor', hint: 'Entra en el fotograma actual', onSelect: () => add('D') },
             { label: 'Cono', hint: 'Material de pista', onSelect: () => add('C') },
             { label: 'Entrenador', onSelect: () => add('K') },
-            { label: 'Balón extra', hint: 'Un balón más, suelto en la pista', onSelect: () => add('B') },
+            { label: 'Balón', hint: 'Al jugador seleccionado, o suelto', onSelect: addBall },
             { label: 'Defensa', hint: free ? `Un defensor para cada atacante sin marca (${free})` : 'Todos los atacantes tienen defensor', onSelect: () => edit((p) => P.addDefense(p)), disabled: free === 0 },
           ]}
         />
@@ -115,7 +132,7 @@ export function Toolbar({ variant = 'column' }: { variant?: 'column' | 'bar' }) 
           <span className="chip chip-k">E</span>
           <span className="tool-label">Entrenador</span>
         </button>
-        <button className="tool add" onClick={() => add('B')} title="Añadir un balón extra">
+        <button className="tool add" onClick={addBall} title="Añadir un balón (al jugador seleccionado si no lleva, o suelto)">
           <span className="chip chip-b" aria-hidden="true" />
           <span className="tool-label">Balón</span>
         </button>

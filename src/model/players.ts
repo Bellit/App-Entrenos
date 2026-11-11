@@ -28,9 +28,7 @@ export function addPlayer(play: Play, team: Team, at?: Pt, fromK = 0): string {
         ? { x: 20 + n * 12, y: half ? 105 : 30 }
         : team === 'C'
           ? { x: 15 + n * 9, y: half ? 132 : 134 }
-          : team === 'K'
-            ? { x: 130, y: half ? 120 : 134 }
-            : { x: 125 - n * 8, y: half ? 132 : 134 });
+          : { x: 130, y: half ? 120 : 134 });
   play.frames.forEach((f, k) => {
     if (k >= fromK) f.positions[p.id] = round1(base);
   });
@@ -39,7 +37,7 @@ export function addPlayer(play: Play, team: Team, at?: Pt, fromK = 0): string {
 
 /** Etiqueta nueva y sin repetir: 1, 2, 3… para atacantes; X1, X2… para defensores; «E» para el entrenador. */
 function nextLabel(play: Play, team: Team): string {
-  if (team === 'C' || team === 'B') return '';
+  if (team === 'C') return '';
   if (team === 'K') return 'E';
   const used = new Set(play.players.map((p) => p.label));
   let n = 1;
@@ -76,7 +74,8 @@ export function removePlayer(play: Play, pid: string) {
   for (const f of play.frames) {
     const pos = f.positions[pid];
     delete f.positions[pid];
-    if (f.ball.holder === pid) f.ball = { holder: null, pos: pos ?? f.ball.pos };
+    // su balón, si llevaba, se queda suelto donde estaba
+    for (const b of f.balls) if (b.holder === pid) Object.assign(b, { holder: null, pos: pos ?? b.pos });
     f.actions = f.actions.filter((a) =>
       a.type === 'pass' ? a.from !== pid && a.to !== pid : a.playerId !== pid,
     );

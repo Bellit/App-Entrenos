@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { PLAYER_R } from '../../model/court';
 import * as P from '../../model/play';
-import type { Play, Pt } from '../../model/types';
+import type { Frame, Play, Pt } from '../../model/types';
+
+const passIn = (f: Frame) => f.actions.find((a) => a.type === 'pass');
+const shotIn = (f: Frame) => f.actions.find((a) => a.type === 'shot');
 import { dragTo, type Effect, type Hit, MOUSE_REACH, pressAt, type Reach, releaseAt, TOUCH_REACH } from './gestures';
 
 /** 5 atacantes, el 1 con balón; devuelve también sus posiciones. */
@@ -50,7 +53,7 @@ describe('Seleccionar', () => {
     const bote = gesture(play, 'select', onPlayer(a), ring, [near(pos(a), 10), near(pos(a), 20)]);
     expect(P.moveOf(applied(play, bote.up).frames[0], a)?.type).toBe('dribble');
     const pase = gesture(play, 'select', onPlayer(a), ring, [near(pos(a), 5), pos(b)]);
-    expect(P.passOf(applied(play, pase.up).frames[0])).toMatchObject({ from: a, to: b });
+    expect(passIn(applied(play, pase.up).frames[0])).toMatchObject({ from: a, to: b });
   });
 
   it('un clic en el anillo solo selecciona: ni dibuja ni avisa', () => {
@@ -68,12 +71,13 @@ describe('Seleccionar', () => {
 
   it('arrastrar el balón hasta un jugador se lo da', () => {
     const { play, c, pos } = setup();
-    const ballPos = P.frameScene(play, 0).ball!.pos;
-    const down = pressAt(play, 0, 'select', { kind: 'ball', id: '' }, ballPos, ballPos);
-    expect(down.select).toBeNull();
+    const [ball] = P.frameScene(play, 0).balls;
+    const ballPos = ball.pos;
+    const down = pressAt(play, 0, 'select', { kind: 'ball', id: ball.id }, ballPos, [ball]);
+    expect(down.select).toEqual({ kind: 'ball', id: ball.id });
     // se pulsó justo sobre el balón, así que se suelta donde queda el puntero: encima del 3
     const up = releaseAt(play, 0, down.drag!, pos(c));
-    expect(applied(play, up).frames[0].ball.holder).toBe(c);
+    expect(applied(play, up).frames[0].balls[0].holder).toBe(c);
   });
 });
 
@@ -95,12 +99,12 @@ describe('herramientas', () => {
     const { play, a, pos } = setup();
     const fx = pressAt(play, 0, 'shot', nothing, pos(a));
     expect(fx.drag).toBeUndefined();
-    expect(P.shotOf(applied(play, fx).frames[0])?.playerId).toBe(a);
+    expect(shotIn(applied(play, fx).frames[0])?.playerId).toBe(a);
   });
 
   it('Pasar: soltar en un compañero crea el pase; en vacío o a un rival, avisa', () => {
     const { play, a, b, pos } = setup();
-    expect(P.passOf(applied(play, gesture(play, 'pass', nothing, pos(a), [pos(b)]).up).frames[0])?.to).toBe(b);
+    expect(passIn(applied(play, gesture(play, 'pass', nothing, pos(a), [pos(b)]).up).frames[0])?.to).toBe(b);
     expect(gesture(play, 'pass', nothing, pos(a), [{ x: 140, y: 130 }]).up.notify).toMatch(/compañero/);
     const x = P.addPlayer(play, 'D', { x: 100, y: 100 });
     expect(gesture(play, 'pass', nothing, pos(a), [{ x: 100, y: 100 }]).up.notify).toMatch(/mismo equipo/);
@@ -129,7 +133,7 @@ describe('con el dedo (márgenes táctiles)', () => {
       return releaseAt(play, 0, down.drag!, off, reach);
     };
     expect(pase(MOUSE_REACH).notify).toMatch(/compañero/);
-    expect(P.passOf(applied(play, pase(TOUCH_REACH)).frames[0])?.to).toBe(b);
+    expect(passIn(applied(play, pase(TOUCH_REACH)).frames[0])?.to).toBe(b);
   });
 
   it('un temblor de 5 unidades es una carrera con ratón, pero no con el dedo', () => {

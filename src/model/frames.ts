@@ -9,7 +9,7 @@ import type { Play } from './types';
 export function addFrameAfter(play: Play, k: number): number {
   if (play.frames.length >= LIMITS.frames) return k;
   const end = endState(play, k);
-  const f = newFrame(end.positions, end.ball);
+  const f = newFrame(end.positions, end.balls);
   f.duration = play.frames[k].duration;
   play.frames.splice(k + 1, 0, f);
   return k + 1;
@@ -30,12 +30,15 @@ export function deleteFrame(play: Play, k: number) {
     const n = end.positions[p.id];
     if (o && n && !near(o, n)) cascadePos(play, k, p.id, o, n);
   }
-  if (!sameBall(next.ball, end.ball)) cascadeBall(play, k, clone(next.ball), end.ball);
+  for (const e of end.balls) {
+    const o = next.balls.find((b) => b.id === e.id);
+    if (o && !sameBall(o, e)) cascadeBall(play, k, e.id, clone(o), e);
+  }
 }
 
 /**
  * Vuelve a encadenar los fotogramas desde `fromK`: cada uno empieza donde acaba el anterior.
- * Las trayectorias se desplazan con su jugador (conservan la forma) y el balón pasa a quien lo
+ * Las trayectorias se desplazan con su jugador (conservan la forma) y cada balón pasa a quien lo
  * tenga al final del fotograma anterior. Devuelve cuántas acciones se han tenido que quitar
  * (pases o tiros de alguien que ya no tiene el balón).
  */
@@ -54,7 +57,8 @@ function rechain(play: Play, fromK = 1): number {
       if (m && s) m.points = translate(m.points, { x: e.x - s.x, y: e.y - s.y });
       else if (m) m.points = [e, ...m.points.slice(1)];
     }
-    f.ball = clone(end.ball);
+    // los balones siguen donde acabaron; los que entran en este fotograma se quedan como están
+    f.balls = [...clone(end.balls), ...f.balls.filter((b) => !end.balls.some((e) => e.id === b.id))];
     const before = f.actions.length;
     sanitizeFrame(f);
     removed += before - f.actions.length;

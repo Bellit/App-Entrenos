@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as P from './play';
-import type { Play } from './types';
+import type { Frame, Play } from './types';
+
+const passIn = (f: Frame) => f.actions.find((a) => a.type === 'pass');
 
 /** Una jugada de prueba: 5 atacantes, el 1 con balón, media pista. */
 const fresh = () => P.newPlay('Prueba', 'half');
@@ -15,7 +17,7 @@ function expectChained(play: Play) {
       expect(pos.x).toBeCloseTo(end.positions[id].x, 1);
       expect(pos.y).toBeCloseTo(end.positions[id].y, 1);
     }
-    expect(play.frames[k].ball.holder).toBe(end.ball.holder);
+    expect(play.frames[k].balls[0].holder).toBe(end.balls[0].holder);
   }
 }
 
@@ -24,7 +26,7 @@ describe('crear jugada', () => {
     const p = fresh();
     expect(p.players).toHaveLength(5);
     expect(p.players.every((x) => x.team === 'O')).toBe(true);
-    expect(p.frames[0].ball.holder).toBe(p.players[0].id);
+    expect(p.frames[0].balls[0].holder).toBe(p.players[0].id);
     expect(p.createdAt).toBe(p.updatedAt);
   });
 
@@ -79,16 +81,16 @@ describe('editar con cascada', () => {
     const p = fresh();
     const [a, b] = ids(p);
     P.setPass(p, 0, a, b);
-    expect(P.endState(p, 0).ball.holder).toBe(b);
+    expect(P.endState(p, 0).balls[0].holder).toBe(b);
     P.addFrameAfter(p, 0);
-    expect(p.frames[1].ball.holder).toBe(b);
+    expect(p.frames[1].balls[0].holder).toBe(b);
   });
 
   it('solo el jugador con balón puede pasar o botar', () => {
     const p = fresh();
     const [, b, c] = ids(p);
     P.setPass(p, 0, b, c); // b no tiene el balón
-    expect(P.passOf(p.frames[0])).toBeUndefined();
+    expect(passIn(p.frames[0])).toBeUndefined();
     P.setMove(p, 0, b, 'dribble', [p.frames[0].positions[b], { x: 50, y: 50 }]);
     expect(P.moveOf(p.frames[0], b)!.type).toBe('move');
   });
@@ -131,7 +133,7 @@ describe('fotogramas: reordenar, duplicar y borrar', () => {
     P.setPass(p, 3, b, c); // fotograma 4: el 2 pasa al 3
     // si ese pase va justo después del bote, el balón aún lo tiene el 1: el pase sobra
     expect(P.moveFrame(p, 3, 1)).toBe(1);
-    expect(P.passOf(p.frames[1])).toBeUndefined();
+    expect(passIn(p.frames[1])).toBeUndefined();
     expectChained(p);
   });
 
@@ -186,7 +188,7 @@ describe('jugadores', () => {
     const [a, b] = ids(p);
     P.setPass(p, 0, a, b);
     P.removePlayer(p, a);
-    expect(p.frames[0].ball.holder).toBeNull();
+    expect(p.frames[0].balls[0].holder).toBeNull();
     expect(p.frames[0].actions).toHaveLength(0);
   });
 

@@ -23,6 +23,7 @@ function deleteSelection(s: Store) {
   const sel = s.selection;
   if (!sel) return;
   if (sel.kind === 'player') s.edit((p) => P.removePlayer(p, sel.id));
+  else if (sel.kind === 'ball') s.edit((p) => P.removeBall(p, sel.id));
   else s.edit((p) => P.deleteAction(p, s.frame, sel.id));
   s.select(null);
 }

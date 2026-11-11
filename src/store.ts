@@ -8,7 +8,7 @@ const APPEARANCE_KEY = 'entrenos.apariencia';
 const loadAppearance = (): Appearance => parseAppearance(readJson(APPEARANCE_KEY, null));
 
 export type Tool = 'select' | 'move' | 'dribble' | 'pass' | 'screen' | 'shot';
-export type Selection = { kind: 'player' | 'action'; id: string } | null;
+export type Selection = { kind: 'player' | 'action' | 'ball'; id: string } | null;
 interface Playhead {
   k: number;
   t: number;
