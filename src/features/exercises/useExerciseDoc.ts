@@ -6,7 +6,8 @@ import { useStore } from '../../store';
 
 /** Lo que el editor cambia además del dibujo (que vive en el almacén de la pizarra). */
 export type Meta = Pick<Exercise, 'title' | 'category' | 'tags' | 'notes' | 'minutes'>;
-export type SaveState = 'saved' | 'saving' | 'error';
+export type { SaveState } from '../../ui/SaveState';
+import type { SaveState } from '../../ui/SaveState';
 
 const pickMeta = (e: Exercise): Meta => ({ title: e.title, category: e.category, tags: e.tags, notes: e.notes, minutes: e.minutes });
 

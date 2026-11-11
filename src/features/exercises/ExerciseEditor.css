@@ -45,38 +45,6 @@
   outline: none;
 }
 
-.save-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-right: 6px;
-  font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.save-state i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #4ade80;
-}
-.save-state.saving i {
-  background: var(--accent);
-}
-.save-state.error {
-  color: var(--danger);
-}
-.save-state.error i {
-  background: var(--danger);
-}
-.topbar .btn.retry {
-  min-height: 34px;
-  padding: 0 10px;
-  font-size: 13px;
-  border-color: var(--danger);
-  color: var(--danger);
-}
-
 @media (max-width: 767px) {
   .back-text {
     display: none;

@@ -162,6 +162,8 @@ textarea {
 input:not([type]),
 input[type='text'],
 input[type='number'],
+input[type='date'],
+input[type='time'],
 textarea,
 select {
   width: 100%;
@@ -169,6 +171,11 @@ select {
   border: 1px solid var(--border);
   border-radius: 7px;
   background: var(--bg);
+}
+/* el calendario y el reloj del navegador, en oscuro como el resto */
+input[type='date'],
+input[type='time'] {
+  color-scheme: dark;
 }
 textarea {
   resize: vertical;

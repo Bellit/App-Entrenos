@@ -1,9 +1,8 @@
-import { memo, useEffect, useMemo, useState } from 'react';
-import { SceneSvg } from '../../court/Scene';
+import { useEffect, useMemo, useState } from 'react';
+import { ExerciseThumb } from './ExerciseThumb';
 import { usePalette } from '../../court/theme';
 import { deleteExercise, listExercises, saveExercise } from '../../data/db';
 import { type Exercise, type ExerciseCategory, categoryName, duplicateExercise, EXERCISE_CATEGORIES, matchesFilters, newExercise } from '../../model/exercise';
-import * as P from '../../model/play';
 import { navigate, routeHref } from '../../app/useRoute';
 import { PageHeader } from '../../ui/PageHeader';
 import { useDataTools } from '../data/useDataTools';
@@ -11,15 +10,6 @@ import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { IconDuplicate, IconMore, IconPlus, IconSearch, IconTrash } from '../../ui/Icons';
 import { Menu } from '../../ui/Menu';
 import './Library.css';
-
-/** Miniatura: el primer fotograma con sus líneas. Solo se redibuja si cambia el ejercicio. */
-const Thumb = memo(
-  function Thumb({ exercise }: { exercise: Exercise }) {
-    const play = exercise.play;
-    return <SceneSvg play={play} scene={P.frameScene(play, 0)} actions={P.drawables(play, 0)} />;
-  },
-  (a, b) => a.exercise.id === b.exercise.id && a.exercise.updatedAt === b.exercise.updatedAt,
-);
 
 /** Biblioteca de ejercicios: buscador, filtros y tarjetas con miniatura. */
 export function Library() {
@@ -159,7 +149,7 @@ export function Library() {
             <li key={e.id} className="card">
               <a className="card-link" href={routeHref.exercise(e.id)} aria-label={`Abrir ${e.title}`}>
                 <div className="thumb" style={{ ['--thumb-bg' as string]: palette.outside }}>
-                  <Thumb exercise={e} />
+                  <ExerciseThumb exercise={e} />
                   <span className="badge minutes">{e.minutes}'</span>
                   {e.play.frames.length > 1 && <span className="badge frames">{e.play.frames.length} fotogramas</span>}
                 </div>

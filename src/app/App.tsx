@@ -3,7 +3,7 @@ import { useAppearance } from '../features/appearance/useAppearance';
 import { ExerciseEditor } from '../features/exercises/ExerciseEditor';
 import { Library } from '../features/exercises/Library';
 import { SessionList } from '../features/sessions/SessionList';
-import { SessionScreen } from '../features/sessions/SessionScreen';
+import { SessionEditor } from '../features/sessions/SessionEditor';
 import { type Route, useRoute } from './useRoute';
 
 /** La pantalla de cada ruta. `key` hace que al cambiar de id se monte una pantalla nueva. */
@@ -12,7 +12,7 @@ function Screen({ route }: { route: Route }) {
     case 'exercise':
       return <ExerciseEditor key={route.id} id={route.id} />;
     case 'session':
-      return <SessionScreen key={route.id} id={route.id} />;
+      return <SessionEditor key={route.id} id={route.id} />;
     case 'library':
       return <Library />;
     default:

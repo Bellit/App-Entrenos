@@ -15,12 +15,11 @@ import { PanelSection } from '../../ui/PanelSection';
 import { PresentButton } from '../../ui/PresentButton';
 import { Toast } from '../../ui/Toast';
 import { ExerciseFields } from './ExerciseFields';
-import { type SaveState, useExerciseDoc } from './useExerciseDoc';
+import { useExerciseDoc } from './useExerciseDoc';
+import { SaveIndicator } from '../../ui/SaveState';
 import '../../app/App.css';
 import './ExerciseEditor.css';
 import './ExerciseEditorMobile.css';
-
-const SAVE_TEXT: Record<SaveState, string> = { saved: 'Guardado', saving: 'Guardando…', error: 'No se pudo guardar' };
 
 /**
  * Pantalla del editor de un ejercicio: la pizarra de ATO (herramientas, pista, fotogramas)
@@ -96,14 +95,7 @@ export function ExerciseEditor({ id }: { id: string }) {
         </a>
         <input className="title-input" type="text" value={meta.title} maxLength={80} onChange={(e) => setMeta({ title: e.target.value })} aria-label="Título del ejercicio" placeholder="Título del ejercicio" />
         <div className="topbar-group end">
-          <span className={`save-state ${saveState}`} role="status" aria-live="polite">
-            <i aria-hidden="true" /> {SAVE_TEXT[saveState]}
-          </span>
-          {saveState === 'error' && (
-            <button className="btn retry" onClick={() => void retry()}>
-              Reintentar
-            </button>
-          )}
+          <SaveIndicator state={saveState} onRetry={retry} />
           {/* deshacer y rehacer son del dibujo; en los campos de texto vale el Ctrl+Z del propio campo */}
           <button className="btn ghost icon" onClick={undo} disabled={!canUndo} aria-label="Deshacer en el dibujo" title="Deshacer en el dibujo (Ctrl+Z)">
             <IconUndo />

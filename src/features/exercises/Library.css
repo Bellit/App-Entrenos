@@ -8,19 +8,6 @@
   gap: 12px;
   margin-bottom: 22px;
 }
-.search {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.search svg {
-  position: absolute;
-  left: 12px;
-  width: 18px;
-  height: 18px;
-  color: var(--muted);
-  pointer-events: none;
-}
 .filters input[type='search'] {
   width: 100%;
   min-height: 44px;
@@ -37,42 +24,6 @@
   border-radius: 10px;
   background: var(--panel);
 }
-.chips {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
-}
-.filter-chip {
-  flex: none;
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--muted);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-}
-.filter-chip:hover {
-  color: var(--text);
-  border-color: #3d4c66;
-}
-.filter-chip.on {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 650;
-}
-.filter-chip-count {
-  margin-left: 4px;
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
-}
-
 /* ---------- Tarjetas ---------- */
 
 .grid {
