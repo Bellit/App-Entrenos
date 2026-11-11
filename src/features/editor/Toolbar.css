@@ -1,0 +1,122 @@
+/* ---------- Barra de herramientas ---------- */
+
+.toolbar {
+  grid-area: tools;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 8px;
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  overflow-y: auto;
+}
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tool-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 4px;
+}
+.tool {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+}
+.tool:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.tool.active {
+  background: #2c3a54;
+  border-color: #64748b;
+  color: #fff;
+}
+.tool-label {
+  font-size: 12.5px;
+  line-height: 1.2;
+}
+.tool kbd {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 10px/1 inherit;
+  opacity: 0.6;
+}
+.chip {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+.chip-o {
+  background: var(--team-o);
+  color: var(--team-o-ink);
+  box-shadow: inset 0 0 0 1px #ffffff40;
+  border-radius: 50%;
+}
+.chip-d {
+  background: var(--team-d);
+  color: var(--team-d-ink);
+  box-shadow: inset 0 0 0 1px #ffffff40;
+  border-radius: 5px;
+}
+
+/* material de pista: cono, entrenador y balón extra */
+.chip-c {
+  background: none;
+  position: relative;
+}
+.chip-c::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 18px solid #f59e0b;
+}
+.chip-k {
+  border-radius: 50%;
+  background: #475569;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+.chip-b {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fb923c, #c2410c);
+  box-shadow: inset 0 0 0 1px #7c2d1240;
+}
+
+@media (max-width: 1180px) {
+  /* tablet: columna estrecha, nombres más pequeños bajo cada icono */
+  .toolbar {
+    gap: 4px;
+    padding: 8px 4px;
+  }
+  .tool {
+    padding: 6px 2px 4px;
+  }
+  .tool-label {
+    font-size: 10.5px;
+  }
+  .tool kbd {
+    right: 3px;
+  }
+  .tool-sep {
+    margin: 4px 2px;
+  }
+}

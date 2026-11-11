@@ -1,0 +1,19 @@
+# Dependencias y compilación
+node_modules
+dist
+*.tsbuildinfo
+
+# Secretos y configuración local (nunca al repositorio)
+.env
+.env.*
+*.local
+*.pem
+*.key
+
+# Herramientas y sistema
+.claude/
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db

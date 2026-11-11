@@ -1,0 +1,83 @@
+/* ---------- Aspecto: temas de pista y colores de equipo ---------- */
+
+.pitches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 4px 6px;
+  border: 2px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  text-align: center;
+}
+.pitch svg {
+  display: block;
+  width: 100%;
+  border-radius: 5px;
+}
+.pitch strong {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.pitch:hover {
+  border-color: #475569;
+}
+.pitch.on {
+  border-color: var(--accent);
+}
+.pitch input,
+.swatch input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.swatches legend {
+  width: 100%;
+}
+.swatch {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #ffffff40;
+  cursor: pointer;
+}
+.swatch.on {
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 4px var(--accent);
+}
+/* otro color: abre el selector del sistema */
+.swatch.custom {
+  background: conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);
+}
+.swatch.custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .swatches {
+    gap: 8px;
+  }
+  .swatch {
+    width: 34px;
+    height: 34px;
+  }
+}

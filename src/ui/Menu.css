@@ -1,0 +1,69 @@
+/* ---------- Menús desplegables ---------- */
+
+.menu {
+  position: relative;
+}
+.menu > .btn:not(.icon) svg:last-child {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+.menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 260px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+  display: grid;
+  gap: 2px;
+}
+.menu-list.up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-item svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--muted);
+}
+.menu-item span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.menu-item small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: #33415a;
+  outline: none;
+}
+
+@media (pointer: coarse) {
+  .menu-item {
+    min-height: 44px;
+  }
+}

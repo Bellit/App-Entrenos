@@ -1,0 +1,295 @@
+/*
+ * Paleta de Entrenos (heredada de ATO)
+ * - Fondo azul noche (--bg, --panel, --panel-2, --border): la pizarra del banquillo.
+ * - Naranja balón (--accent): solo para lo principal: exportar, reproducir, el fotograma
+ *   abierto, la barra de progreso y lo seleccionado en la pista o en el panel.
+ * - Azul cielo (--focus): solo para el foco del teclado y el anillo de dibujo.
+ * - Colores de equipo (--team-o, --team-d): los elige el usuario en «Aspecto».
+ * Tipografía: Barlow Condensed para títulos y números; Barlow para el resto (alojadas en la web).
+ */
+:root {
+  --font-text: Barlow, 'Segoe UI', Roboto, system-ui, -apple-system, Arial, sans-serif;
+  --font-title: 'Barlow Condensed', 'Segoe UI', Roboto, system-ui, Arial, sans-serif;
+  --bg: #111827;
+  --panel: #1a2232;
+  --panel-2: #222c3f;
+  --border: #2e3a50;
+  --text: #e8edf5;
+  --muted: #9aa8bd;
+  --accent: #f97316;
+  --accent-ink: #1a0d02;
+  --blue: #3b82f6;
+  --danger: #f87171;
+  --focus: #38bdf8;
+  --radius: 10px;
+  --team-o: #1d4ed8;
+  --team-o-ink: #fff;
+  --team-d: #c62828;
+  --team-d-ink: #fff;
+  font-family: var(--font-text);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 12px;
+}
+
+/* ---------- Botones ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+.btn:hover:not(:disabled) {
+  background: #2b3850;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: var(--panel-2);
+}
+.btn.icon {
+  padding: 0;
+  width: 36px;
+  justify-content: center;
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+.btn.primary:hover:not(:disabled) {
+  background: #fb8a3c;
+}
+.btn.danger {
+  color: var(--danger);
+  border-color: #5b2a2a;
+  background: transparent;
+  width: 100%;
+  justify-content: center;
+}
+.danger-text {
+  color: var(--danger);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.field > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.field output {
+  color: var(--text);
+}
+input:not([type]),
+input[type='text'],
+input[type='number'],
+textarea,
+select {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+}
+textarea {
+  resize: vertical;
+}
+input[type='range'] {
+  accent-color: var(--accent);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.check input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.segmented button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+}
+.segmented button.on {
+  background: var(--panel-2);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.segmented.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.error {
+  color: var(--danger);
+}
+
+kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--bg);
+  font: 600 12px/1.4 inherit;
+}
+
+/* Grupos de opciones (fieldset con .options): sin marco, con la leyenda como etiqueta pequeña */
+
+.options {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.options legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.options label:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/*
+ * Con el dedo: sin zoom por doble toque en los controles (el zoom del sistema con dos dedos
+ * sigue funcionando) y zonas de toque de al menos 44 px, como recomiendan Apple y Google.
+ */
+button,
+select,
+input,
+summary,
+label,
+[role='slider'] {
+  touch-action: manipulation;
+}
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+  }
+  .btn.icon {
+    width: 44px;
+  }
+  .segmented button {
+    min-height: 44px;
+  }
+  input:not([type]),
+  input[type='text'],
+  input[type='search'],
+  select {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* contenedor de la app: solo lleva colores y tema, no genera caja */
+.theme-root {
+  display: contents;
+}

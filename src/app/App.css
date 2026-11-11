@@ -1,0 +1,120 @@
+/* ---------- Layout ---------- */
+
+.app {
+  display: grid;
+  height: 100%;
+  /* en móvil, la altura visible de verdad (sin la barra del navegador); donde no exista, la de arriba */
+  height: 100dvh;
+  /* zonas seguras del iPhone (isla, esquinas, barra de inicio); en ordenador valen 0 */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  grid-template-columns: 92px minmax(0, 1fr) 340px;
+  grid-template-rows: 58px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'top top top'
+    'tools stage side'
+    'tools time side';
+}
+
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: max-content;
+}
+.brand h1 {
+  font-size: 16px;
+  letter-spacing: 0.01em;
+}
+.logo-mark {
+  color: #fff;
+  flex: none;
+}
+/* lema en estilo rotulador, junto a la marca */
+.brand .tagline {
+  font-family: var(--font-title);
+  font-size: 17px;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.topbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.topbar-group.end {
+  margin-left: auto;
+}
+
+.vsep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 6px;
+}
+
+.app.presenting {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'stage'
+    'time';
+}
+.app.presenting .topbar,
+.app.presenting .toolbar,
+.app.presenting .side,
+.app.presenting .hint {
+  display: none;
+}
+
+/* anillo de dibujo: aparece al pasar por el borde del jugador */
+
+/* ---------- Pantallas más estrechas ---------- */
+
+@media (max-width: 1180px) {
+  .topbar-group .btn:not(.icon):not(.primary) {
+    font-size: 0;
+    gap: 0;
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  /* tablet: herramientas estrechas y la pista a todo el ancho; el panel lateral se pliega encima */
+  .app {
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+      'top top'
+      'tools stage'
+      'tools time';
+  }
+  .topbar {
+    gap: 10px;
+    padding: 0 10px;
+  }
+  .topbar .btn.on {
+    background: var(--panel-2);
+    color: var(--text);
+  }
+}
+
+@media (max-width: 1180px) and (pointer: coarse) {
+  .topbar-group .btn:not(.icon):not(.primary) {
+    width: 44px;
+  }
+  .topbar {
+    gap: 6px;
+  }
+}

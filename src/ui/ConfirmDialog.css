@@ -1,0 +1,16 @@
+.confirm-message p {
+  margin: 0 0 8px;
+}
+.confirm-actions {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.btn.confirm-danger {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fff;
+  font-weight: 600;
+}
+.btn.confirm-danger:hover:not(:disabled) {
+  background: #991b1b;
+}

@@ -1,0 +1,185 @@
+/*
+ * Maqueta de móvil del editor de ejercicios (adaptada de ATO). Va con la clase `.mobile` que pone
+ * React según el tamaño de pantalla (ver ui/breakpoints.ts), no con @media: así funciona igual en
+ * vertical y en horizontal. Debe cargarse después de SidePanel.css y Timeline.css.
+ */
+
+/* ---------- Vertical: cabecera, pista, fotogramas y herramientas en columna ---------- */
+
+.app.mobile {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 52px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'top'
+    'stage'
+    'time'
+    'tools';
+}
+
+.app.mobile .topbar {
+  gap: 2px;
+  padding: 0 4px 0 6px;
+}
+.app.mobile .back-text {
+  display: none;
+}
+.app.mobile .topbar .title-input {
+  flex: 1;
+  max-width: none;
+  font-size: 19px;
+}
+.app.mobile .topbar-group.end {
+  margin-left: 0;
+}
+/* estado de guardado: solo el punto (el texto sigue para lectores de pantalla); el error se lee entero */
+.app.mobile .save-state {
+  margin-right: 4px;
+  font-size: 0;
+  gap: 0;
+}
+.app.mobile .save-state.error {
+  font-size: 12px;
+  gap: 6px;
+}
+.app.mobile .menu-list {
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+}
+
+.app.mobile .stage {
+  padding: 6px 6px 2px;
+}
+.app.mobile .hint {
+  display: none;
+}
+.app.mobile .present {
+  top: 10px;
+  right: 10px;
+}
+
+/* línea de tiempo: barra de progreso fina y una sola fila de fotogramas */
+.timeline.compact {
+  gap: 2px;
+  padding: 2px 8px 4px;
+}
+.timeline.compact .frames-row {
+  gap: 6px;
+}
+.timeline.compact .frame {
+  width: 56px;
+  height: 48px;
+}
+.timeline.compact .frame-n {
+  font-size: 12px;
+}
+.timeline.compact .time {
+  min-width: 44px;
+}
+
+/* herramientas abajo, al alcance del pulgar */
+.toolbar.bar {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
+  border-right: 0;
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+}
+.toolbar.bar .tool-group {
+  flex: 1;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 2px;
+}
+.toolbar.bar .tool {
+  flex: 1;
+  min-width: 44px;
+  padding: 4px 2px;
+}
+.toolbar.bar .tool-label {
+  font-size: 10px;
+}
+
+/* ---------- Panel del ejercicio: una franja bajo la pista ---------- */
+
+/* no tapa la pista: al abrirse ocupa una franja y la pista se encoge para seguir entera a la vista */
+.app.mobile .side {
+  grid-area: side;
+  display: none;
+  position: static;
+  transform: none;
+  visibility: visible;
+  width: auto;
+  max-height: none;
+  min-height: 0;
+  border-left: 0;
+  border-top: 1px solid var(--border);
+  box-shadow: none;
+  overflow-y: auto;
+}
+.app.mobile.side-open {
+  grid-template-rows: 52px minmax(0, 1fr) minmax(0, 40dvh) auto auto;
+  grid-template-areas:
+    'top'
+    'stage'
+    'side'
+    'time'
+    'tools';
+}
+.app.mobile.side-open .side {
+  display: block;
+}
+
+.app.mobile .toast {
+  bottom: calc(150px + env(safe-area-inset-bottom));
+}
+
+/* ---------- Horizontal: pista a la izquierda, lo demás a la derecha ---------- */
+
+.app.mobile.landscape {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'top top'
+    'stage time'
+    'stage tools';
+}
+.app.mobile.landscape .timeline {
+  align-self: end;
+  border-left: 1px solid var(--border);
+}
+.app.mobile.landscape .toolbar.bar {
+  border-left: 1px solid var(--border);
+}
+.app.mobile.landscape.side-open {
+  grid-template-rows: 48px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'top top'
+    'stage time'
+    'stage tools';
+}
+.app.mobile.landscape .side {
+  position: fixed;
+  z-index: 20;
+  top: calc(48px + env(safe-area-inset-top));
+  right: env(safe-area-inset-right);
+  bottom: 0;
+  width: min(360px, 46vw);
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 0;
+  border-left: 1px solid var(--border);
+  box-shadow: -12px 0 30px rgb(0 0 0 / 0.4);
+}
+.app.mobile.landscape .toast {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* pantalla completa: solo pista y reproducción */
+.app.mobile.presenting {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'stage'
+    'time';
+}

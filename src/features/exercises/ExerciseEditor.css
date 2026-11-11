@@ -1,0 +1,80 @@
+/* Barra superior del editor de ejercicios (la maqueta en rejilla está en app/App.css) */
+
+.editor-state {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  height: 100dvh;
+  padding: 24px;
+  text-align: center;
+}
+.editor-state h1 {
+  font-size: 34px;
+}
+
+.topbar .back {
+  flex: none;
+  text-decoration: none;
+  color: var(--muted);
+}
+.topbar .back:hover {
+  color: var(--text);
+}
+.topbar .title-input {
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 520px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-title);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+}
+.topbar .title-input:hover {
+  border-color: var(--border);
+}
+.topbar .title-input:focus {
+  border-color: var(--accent);
+  background: var(--bg);
+  outline: none;
+}
+
+.save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.save-state i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+.save-state.saving i {
+  background: var(--accent);
+}
+.save-state.error {
+  color: var(--danger);
+}
+.save-state.error i {
+  background: var(--danger);
+}
+
+@media (max-width: 767px) {
+  .back-text {
+    display: none;
+  }
+  .topbar .title-input {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,66 @@
+.ex-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ex-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px;
+  gap: 10px;
+}
+.ex-fields textarea {
+  line-height: 1.45;
+  min-height: 140px;
+}
+.templates {
+  display: inline-flex;
+  gap: 10px;
+}
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.link-btn:hover {
+  text-decoration: underline;
+}
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tag-list:empty {
+  display: none;
+}
+.tag-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  font-size: 13px;
+}
+.tag-list button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.tag-list button:hover {
+  background: var(--border);
+  color: var(--text);
+}

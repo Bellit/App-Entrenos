@@ -1,0 +1,82 @@
+/* ---------- Diálogos ---------- */
+
+.dialog {
+  width: min(560px, calc(100vw - 32px));
+  padding: 0 20px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+}
+.dialog::backdrop {
+  background: rgb(5 8 15 / 0.65);
+}
+.dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 6px;
+}
+.dialog h2 {
+  font-size: 22px;
+  letter-spacing: 0.01em;
+}
+.dialog p {
+  line-height: 1.5;
+}
+.lib-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.lib-section h3,
+.lib-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.lib-title {
+  margin: 14px 0 8px;
+}
+.lib-section p {
+  margin: 0;
+  font-size: 13px;
+}
+.lib-section code {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.dialog.wide {
+  width: min(880px, calc(100vw - 32px));
+}
+
+/* móvil: los diálogos ocupan toda la pantalla */
+@media (max-width: 767px), (max-height: 500px) {
+  .dialog,
+  .dialog.wide {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0 14px calc(14px + env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+  }
+  .dialog header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    background: var(--panel);
+  }
+}

@@ -1,0 +1,60 @@
+/* ---------- Pista ---------- */
+
+.stage {
+  grid-area: stage;
+  position: relative;
+  display: flex;
+  min-height: 0;
+  padding: 14px 14px 6px;
+}
+.board {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 6px;
+}
+.court {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border-radius: var(--radius);
+  touch-action: none;
+  user-select: none;
+}
+.court:not(.tool-select) {
+  cursor: crosshair;
+}
+.court.is-playing {
+  cursor: pointer;
+}
+/* botón de pantalla completa, en la esquina de la pista */
+.present {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  z-index: 2;
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+}
+/* pantalla completa: solo la pista y la reproducción */
+
+.court .player .halo {
+  cursor: crosshair;
+  transition: stroke 0.12s;
+}
+.court .player .halo:hover {
+  stroke: #0ea5e9;
+}
+.hint {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+@media (pointer: coarse) {
+  /* sin ratón no se puede «pasar por encima»: el anillo del jugador seleccionado se ve siempre */
+  .court .player.is-selected .halo {
+    stroke: #0ea5e9;
+  }
+}
