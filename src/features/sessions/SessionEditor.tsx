@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { routeHref } from '../../app/useRoute';
 import * as S from '../../model/session';
-import { IconPlus, IconPrev } from '../../ui/Icons';
+import { IconPlay, IconPlus, IconPrev } from '../../ui/Icons';
 import { SaveIndicator } from '../../ui/SaveState';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionBlocks } from './SessionBlocks';
@@ -111,6 +111,11 @@ export function SessionEditor({ id }: { id: string }) {
         <input className="sess-title" value={s.title} maxLength={S.SESSION_LIMITS.title} onChange={(e) => field('title')(e.target.value)} aria-label="Título de la sesión" placeholder="Título de la sesión" />
         <div className="head-actions">
           <SaveIndicator state={saveState} onRetry={retry} />
+          {s.blocks.length > 0 && (
+            <a className="btn primary big train-btn" href={routeHref.training(s.id)} title="Seguir la sesión pantalla a pantalla">
+              <IconPlay /> <span className="train-text">Entrenar</span>
+            </a>
+          )}
         </div>
       </header>
 

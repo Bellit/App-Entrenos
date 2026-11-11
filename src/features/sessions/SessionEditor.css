@@ -523,6 +523,13 @@
     font-size: 21px;
     padding: 0 6px;
   }
+  /* en móvil, «Entrenar» solo con el icono para que quepa el título */
+  .train-text {
+    display: none;
+  }
+  .train-btn {
+    padding: 0 12px;
+  }
   .sess-layout {
     grid-template-columns: minmax(0, 1fr);
     padding: 14px 12px 110px;

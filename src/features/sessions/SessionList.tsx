@@ -4,7 +4,7 @@ import { deleteSession, listExercises, listSessions, saveSession } from '../../d
 import { categoryName } from '../../model/exercise';
 import * as S from '../../model/session';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDuplicate, IconMore, IconPlus, IconTrash } from '../../ui/Icons';
+import { IconDuplicate, IconMore, IconPlay, IconPlus, IconTrash } from '../../ui/Icons';
 import { Menu } from '../../ui/Menu';
 import { PageHeader } from '../../ui/PageHeader';
 import { useDataTools } from '../data/useDataTools';
@@ -58,6 +58,7 @@ function SessionCard({ s, today, onDuplicate, onDelete }: { s: S.Session; today:
           label={`Más acciones de ${s.title}`}
           icon={<IconMore />}
           items={[
+            ...(s.blocks.length ? [{ label: 'Entrenar', hint: 'Seguirla pantalla a pantalla', icon: <IconPlay />, onSelect: () => navigate(routeHref.training(s.id)) }] : []),
             { label: 'Duplicar', hint: 'Misma estructura, sin fecha', icon: <IconDuplicate />, onSelect: onDuplicate },
             { label: 'Eliminar', icon: <IconTrash />, onSelect: onDelete },
           ]}

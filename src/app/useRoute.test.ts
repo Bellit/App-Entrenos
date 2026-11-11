@@ -12,6 +12,7 @@ describe('parseRoute', () => {
   it('lee el id del ejercicio y de la sesión', () => {
     expect(parseRoute('#/ejercicio/ab12-cd')).toEqual({ name: 'exercise', id: 'ab12-cd' });
     expect(parseRoute('#/sesion/xy_9')).toEqual({ name: 'session', id: 'xy_9' });
+    expect(parseRoute('#/entreno/xy_9')).toEqual({ name: 'training', id: 'xy_9' });
   });
   it('un id raro vuelve a la portada', () => {
     expect(parseRoute('#/ejercicio/../../x')).toEqual({ name: 'sessions' });
