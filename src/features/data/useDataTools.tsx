@@ -4,7 +4,8 @@ import { requestPersistence, type StorageState, storageState } from '../../data/
 import { download } from '../../files';
 import { backupData, backupFileName, readImportFile } from '../../model/importFile';
 import { getItem, setItem } from '../../prefs';
-import { IconDownload, IconMore, IconUpload } from '../../ui/Icons';
+import { IconDownload, IconMore, IconPlus, IconUpload } from '../../ui/Icons';
+import { installApp, usePwa } from '../../pwa/pwa';
 import { Menu } from '../../ui/Menu';
 
 /** Hasta cuándo no se vuelve a mostrar el aviso de copia de seguridad (preferencia de este navegador). */
@@ -28,6 +29,7 @@ export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChang
   const [storage, setStorage] = useState<StorageState>('unknown');
   const [backupLater, setBackupLater] = useState(() => Number(getItem(BACKUP_LATER_KEY)) > Date.now());
   const fileInput = useRef<HTMLInputElement>(null);
+  const pwa = usePwa();
 
   useEffect(() => {
     storageState().then(setStorage);
@@ -95,6 +97,7 @@ export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChang
       items={[
         { label: 'Importar archivos…', hint: 'Jugadas de ATO, ejercicios o una copia', icon: <IconUpload />, onSelect: () => fileInput.current?.click() },
         { label: 'Descargar copia de seguridad', hint: 'Ejercicios y sesiones en un archivo', icon: <IconDownload />, onSelect: downloadBackup, disabled: !hasData },
+        ...(pwa.canInstall ? [{ label: 'Instalar la app', hint: 'En la pantalla de inicio, y funciona sin conexión', icon: <IconPlus />, onSelect: () => void installApp() }] : []),
       ]}
     />
   );
