@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { newExercise } from './exercise';
 import { ATO_BACKUP_FORMAT, backupData, backupFileName, exercisesFromData } from './importFile';
 import * as P from './play';
+import { addExerciseBlock, newSession } from './session';
 
 const atoPlay = (name = 'Mi jugada') => JSON.parse(JSON.stringify(P.newPlay(name)));
 
@@ -47,6 +48,16 @@ describe('importar archivos como ejercicios', () => {
     expect(r.exercises.map((e) => e.title)).toEqual(['Uno', 'Dos']);
     expect(r.skipped).toBe(1);
     expect(r.exercises.some((e) => e.id === a.id || e.id === b.id)).toBe(false);
+  });
+
+  it('la copia trae también las sesiones, apuntando a los ejercicios importados', () => {
+    const e = newExercise('Rueda');
+    const s = addExerciseBlock(newSession('Martes'), e);
+    const r = exercisesFromData(JSON.parse(JSON.stringify(backupData([e], [s]))));
+    expect(r.sessions).toHaveLength(1);
+    const b = r.sessions[0].blocks[0];
+    expect(b.kind === 'exercise' && b.exerciseId).toBe(r.exercises[0].id);
+    expect(r.sessions[0].id).not.toBe(s.id);
   });
 
   it('el archivo de copia lleva la fecha en el nombre', () => {

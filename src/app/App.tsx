@@ -2,7 +2,23 @@ import { ThemeContext } from '../court/theme';
 import { useAppearance } from '../features/appearance/useAppearance';
 import { ExerciseEditor } from '../features/exercises/ExerciseEditor';
 import { Library } from '../features/exercises/Library';
-import { useRoute } from './useRoute';
+import { SessionList } from '../features/sessions/SessionList';
+import { SessionScreen } from '../features/sessions/SessionScreen';
+import { type Route, useRoute } from './useRoute';
+
+/** La pantalla de cada ruta. `key` hace que al cambiar de id se monte una pantalla nueva. */
+function Screen({ route }: { route: Route }) {
+  switch (route.name) {
+    case 'exercise':
+      return <ExerciseEditor key={route.id} id={route.id} />;
+    case 'session':
+      return <SessionScreen key={route.id} id={route.id} />;
+    case 'library':
+      return <Library />;
+    default:
+      return <SessionList />;
+  }
+}
 
 /**
  * La app: elige la pantalla según la dirección (`useRoute`) y da a toda la pista los colores
@@ -14,7 +30,7 @@ export default function App() {
   return (
     <ThemeContext.Provider value={palette}>
       <div className="theme-root" data-pitch={pitch} style={style}>
-        {route.name === 'exercise' ? <ExerciseEditor key={route.id} id={route.id} /> : <Library />}
+        <Screen route={route} />
       </div>
     </ThemeContext.Provider>
   );

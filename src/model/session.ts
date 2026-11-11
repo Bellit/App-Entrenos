@@ -190,6 +190,43 @@ export function formatDuration(minutes: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Lista de sesiones: fechas y grupos
+// ---------------------------------------------------------------------------
+
+/** Fecha de hoy `AAAA-MM-DD` en la hora local (no en UTC: a las 00:30 en España sigue siendo hoy). */
+export function todayISO(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Partes de una fecha para mostrarla: «mar», «17», «nov» y «martes, 17 de noviembre de 2026». */
+export function dateParts(iso: string): { weekday: string; day: string; month: string; long: string } | null {
+  if (!isDate(iso)) return null;
+  // a mediodía UTC y mostrada en UTC: así el día no cambia por la zona horaria
+  const d = new Date(`${iso}T12:00:00Z`);
+  const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('es-ES', { timeZone: 'UTC', ...o }).format(d).replace('.', '');
+  return { weekday: f({ weekday: 'short' }), day: f({ day: 'numeric' }), month: f({ month: 'short' }), long: f({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) };
+}
+
+/**
+ * Agrupa las sesiones para la lista: próximas (de hoy en adelante, la más cercana primero),
+ * sin fecha (la última modificada primero) y pasadas (la más reciente primero).
+ */
+export function groupSessions(list: Session[], today: string) {
+  const byDate = (a: Session, b: Session) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime);
+  return {
+    upcoming: list.filter((s) => s.date && s.date >= today).sort(byDate),
+    undated: list.filter((s) => !s.date).sort((a, b) => b.updatedAt - a.updatedAt),
+    past: list.filter((s) => s.date && s.date < today).sort((a, b) => byDate(b, a)),
+  };
+}
+
+/** Copia de una sesión con id nuevo (para «Duplicar»): misma estructura, sin fecha. */
+export function duplicateSession(s: Session): Session {
+  const now = Date.now();
+  return { ...structuredClone(s), id: uid(), title: `${s.title} (copia)`.slice(0, SESSION_LIMITS.title), date: '', blocks: s.blocks.map((b) => ({ ...structuredClone(b), id: uid() })), createdAt: now, updatedAt: now };
+}
+
+// ---------------------------------------------------------------------------
 // Leer datos de fuera (base de datos o archivo)
 // ---------------------------------------------------------------------------
 

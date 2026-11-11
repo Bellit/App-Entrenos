@@ -2,20 +2,26 @@ import { useSyncExternalStore } from 'react';
 
 /**
  * Enrutado mínimo con el «hash» de la dirección (lo que va después de #).
- *   #/                    → biblioteca de ejercicios
+ *   #/                    → lista de sesiones (la portada)
+ *   #/sesion/<id>         → una sesión
+ *   #/ejercicios          → biblioteca de ejercicios
  *   #/ejercicio/<id>      → editor de un ejercicio
  * Se usa el hash y no rutas normales porque la app es una web estática: no hace falta configurar
  * el servidor para que cualquier dirección devuelva la misma página.
  */
-export type Route = { name: 'library' } | { name: 'exercise'; id: string };
+export type Route = { name: 'sessions' } | { name: 'session'; id: string } | { name: 'library' } | { name: 'exercise'; id: string };
 
 export function parseRoute(hash: string): Route {
-  const m = /^#\/ejercicio\/([\w-]{1,64})$/.exec(hash);
-  return m ? { name: 'exercise', id: m[1] } : { name: 'library' };
+  if (hash === '#/ejercicios') return { name: 'library' };
+  const m = /^#\/(ejercicio|sesion)\/([\w-]{1,64})$/.exec(hash);
+  if (m) return m[1] === 'ejercicio' ? { name: 'exercise', id: m[2] } : { name: 'session', id: m[2] };
+  return { name: 'sessions' };
 }
 
 export const routeHref = {
-  library: '#/',
+  sessions: '#/',
+  session: (id: string) => `#/sesion/${id}`,
+  library: '#/ejercicios',
   exercise: (id: string) => `#/ejercicio/${id}`,
 };
 

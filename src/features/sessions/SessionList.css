@@ -1,0 +1,192 @@
+/* Lista de sesiones (portada). Lo común a las páginas está en ui/Page.css. */
+
+.session-group {
+  margin-bottom: 30px;
+}
+.session-group h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.session-group .count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.session-cards {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.session-card:hover,
+.session-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.3);
+}
+.session-card.today {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+
+.session-link {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 56px 14px 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* la fecha, como una hoja de calendario */
+.session-date {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  align-self: start;
+  min-height: 84px;
+  border-radius: 12px;
+  background: var(--panel-2);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  line-height: 1;
+}
+.session-date .wd {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.session-date .dd {
+  margin: 2px 0;
+  font-size: 38px;
+  font-weight: 700;
+}
+.session-date .mm {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.session-card.today .session-date {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.session-card.today .session-date .wd,
+.session-card.today .session-date .mm {
+  color: var(--accent-ink);
+}
+.session-date.none .wd {
+  padding: 0 6px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.session-body h3 {
+  margin: 2px 0 6px;
+  font-size: 23px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.session-goal {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* los bloques, en orden, como una tira */
+.session-blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.session-blocks li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.session-blocks li.text {
+  border-style: dashed;
+  color: var(--muted);
+}
+.session-blocks li small {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.session-blocks li.more {
+  color: var(--muted);
+}
+
+.session-menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.empty .small {
+  font-size: 14px;
+}
+.empty a {
+  color: var(--accent);
+}
+
+@media (max-width: 767px) {
+  .session-link {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 48px 12px 12px;
+  }
+  .session-date {
+    min-height: 70px;
+  }
+  .session-date .dd {
+    font-size: 30px;
+  }
+  .session-body h3 {
+    font-size: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-card {
+    transition: none;
+  }
+}

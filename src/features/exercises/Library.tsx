@@ -1,22 +1,16 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { backupData, backupFileName, readImportFile } from '../../model/importFile';
-import { requestPersistence, type StorageState, storageState } from '../../data/persistence';
-import { download } from '../../files';
-import { getItem, setItem } from '../../prefs';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { SceneSvg } from '../../court/Scene';
 import { usePalette } from '../../court/theme';
 import { deleteExercise, listExercises, saveExercise } from '../../data/db';
 import { type Exercise, type ExerciseCategory, categoryName, duplicateExercise, EXERCISE_CATEGORIES, matchesFilters, newExercise } from '../../model/exercise';
 import * as P from '../../model/play';
 import { navigate, routeHref } from '../../app/useRoute';
-import { Brand } from '../../ui/Brand';
+import { PageHeader } from '../../ui/PageHeader';
+import { useDataTools } from '../data/useDataTools';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDownload, IconDuplicate, IconMore, IconPlus, IconSearch, IconTrash, IconUpload } from '../../ui/Icons';
+import { IconDuplicate, IconMore, IconPlus, IconSearch, IconTrash } from '../../ui/Icons';
 import { Menu } from '../../ui/Menu';
 import './Library.css';
-
-/** Hasta cuándo no se vuelve a mostrar el aviso de copia de seguridad (preferencia de este navegador). */
-const BACKUP_LATER_KEY = 'entrenos.copia.masTarde';
 
 /** Miniatura: el primer fotograma con sus líneas. Solo se redibuja si cambia el ejercicio. */
 const Thumb = memo(
@@ -35,11 +29,6 @@ export function Library() {
   const [category, setCategory] = useState<ExerciseCategory | ''>('');
   const [tag, setTag] = useState('');
   const [toDelete, setToDelete] = useState<Exercise | null>(null);
-  /** Aviso arriba de la lista: resultado de importar o un error al guardar o borrar. */
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [storage, setStorage] = useState<StorageState>('unknown');
-  const [backupLater, setBackupLater] = useState(() => Number(getItem(BACKUP_LATER_KEY)) > Date.now());
-  const fileInput = useRef<HTMLInputElement>(null);
   const palette = usePalette();
 
   const refresh = () =>
@@ -48,30 +37,9 @@ export function Library() {
       .catch(() => setError(true));
   useEffect(() => {
     refresh();
-    storageState().then(setStorage);
   }, []);
-
-  /** Ejecuta una acción de guardado; si falla, lo dice en vez de no hacer nada. */
-  const guarded = (what: string, action: () => Promise<unknown>) => async () => {
-    try {
-      await action();
-    } catch {
-      setMessage({ ok: false, text: `No se ha podido ${what}. Puede que el navegador no deje guardar (modo privado o sin espacio).` });
-    }
-  };
-  /** Al crear o importar (un clic), se pide al navegador que no borre los datos. */
-  const protect = () => requestPersistence().then((ok) => ok && setStorage('persisted'));
-
-  const downloadBackup = guarded('preparar la copia', async () => {
-    const all = await listExercises();
-    download(new Blob([JSON.stringify(backupData(all), null, 2)], { type: 'application/json' }), backupFileName());
-    remindBackupLater();
-  });
-  /** «Más tarde»: el aviso de copia se oculta una semana. */
-  const remindBackupLater = () => {
-    setItem(BACKUP_LATER_KEY, String(Date.now() + 7 * 24 * 3600 * 1000));
-    setBackupLater(true);
-  };
+  const data = useDataTools({ hasData: !!list?.length, onChanged: refresh });
+  const { guarded, protect } = data;
 
   const allTags = useMemo(() => [...new Set((list ?? []).flatMap((e) => e.tags))].sort(), [list]);
   const shown = (list ?? []).filter((e) => matchesFilters(e, query, category, tag));
@@ -89,30 +57,6 @@ export function Library() {
       await saveExercise(duplicateExercise(e));
       refresh();
     })();
-  /** Importa uno o varios archivos .json (jugadas de ATO, copias o ejercicios) como ejercicios nuevos. */
-  const importFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
-    protect();
-    let added = 0;
-    let skipped = 0;
-    const problems: string[] = [];
-    for (const file of Array.from(files)) {
-      try {
-        const r = await readImportFile(file);
-        for (const e of r.exercises) await saveExercise(e);
-        added += r.exercises.length;
-        skipped += r.skipped;
-      } catch (err) {
-        problems.push(`${file.name}: ${err instanceof Error ? err.message : 'no se pudo leer.'}`);
-      }
-    }
-    if (fileInput.current) fileInput.current.value = ''; // permite volver a elegir el mismo archivo
-    const parts = [];
-    if (added) parts.push(added === 1 ? 'Se ha importado 1 ejercicio.' : `Se han importado ${added} ejercicios.`);
-    if (skipped) parts.push(skipped === 1 ? 'Se ha saltado 1 elemento dañado.' : `Se han saltado ${skipped} elementos dañados.`);
-    setMessage({ ok: added > 0 && problems.length === 0, text: [...parts, ...problems].join(' ') });
-    refresh();
-  };
   const remove = (e: Exercise) =>
     guarded('eliminar el ejercicio', async () => {
       setToDelete(null);
@@ -120,29 +64,20 @@ export function Library() {
       refresh();
     })();
 
-  const showBackupNotice = storage === 'at-risk' && !backupLater && !!list && list.length > 0;
-
   return (
     <div className="page">
-      <header className="page-head">
-        <Brand />
-        <div className="head-actions">
-          <Menu
-            iconOnly
-            label="Importar y copias de seguridad"
-            title="Importar y copias de seguridad"
-            icon={<IconMore />}
-            items={[
-              { label: 'Importar archivos…', hint: 'Jugadas de ATO, ejercicios o una copia', icon: <IconUpload />, onSelect: () => fileInput.current?.click() },
-              { label: 'Descargar copia de seguridad', hint: 'Todos los ejercicios en un archivo', icon: <IconDownload />, onSelect: downloadBackup, disabled: !list?.length },
-            ]}
-          />
-          <button className="btn primary big" onClick={create}>
-            <IconPlus /> Nuevo ejercicio
-          </button>
-        </div>
-        <input ref={fileInput} type="file" accept=".json,application/json" multiple hidden onChange={(e) => importFiles(e.target.files)} aria-label="Importar archivos" />
-      </header>
+      <PageHeader
+        current="library"
+        actions={
+          <>
+            {data.menu}
+            <button className="btn primary big" onClick={create}>
+              <IconPlus /> Nuevo ejercicio
+            </button>
+          </>
+        }
+      />
+      {data.fileInputEl}
 
       <main className="page-main">
         <div className="page-title">
@@ -150,31 +85,7 @@ export function Library() {
           {list && list.length > 0 && <p className="muted">{list.length === 1 ? '1 ejercicio guardado' : `${list.length} ejercicios guardados`}</p>}
         </div>
 
-        {message && (
-          <p className={`notice${message.ok ? ' ok' : ' error'}`} role="status">
-            {message.text}{' '}
-            <button className="link" onClick={() => setMessage(null)}>
-              Cerrar
-            </button>
-          </p>
-        )}
-
-        {showBackupNotice && (
-          <div className="notice backup" role="note">
-            <p>
-              <strong>Tus ejercicios solo están en este navegador.</strong> Si se queda sin espacio, o en iPhone si pasas una semana sin abrir la app, podría borrarlos. Guarda una copia de vez en cuando
-              (o añade la app a la pantalla de inicio).
-            </p>
-            <div className="notice-actions">
-              <button className="btn" onClick={downloadBackup}>
-                <IconDownload /> Descargar copia
-              </button>
-              <button className="link" onClick={remindBackupLater}>
-                Más tarde
-              </button>
-            </div>
-          </div>
-        )}
+        {data.notices}
 
         {error && (
           <p className="notice error" role="alert">
@@ -226,7 +137,7 @@ export function Library() {
             <button className="btn primary big" onClick={create}>
               <IconPlus /> Crear el primer ejercicio
             </button>
-            <button className="link" onClick={() => fileInput.current?.click()}>
+            <button className="link" onClick={data.openImport}>
               o importar jugadas de ATO
             </button>
           </section>

@@ -9,6 +9,7 @@
 import { uid } from './common';
 import { EXERCISE_LIMITS, type Exercise, newExercise, parseExercise } from './exercise';
 import { parsePlay } from './parse';
+import { parseSession, type Session } from './session';
 import type { Play } from './types';
 
 export const ATO_BACKUP_FORMAT = 'pizarra-jugadas-copia';
@@ -17,7 +18,30 @@ export const BACKUP_FORMAT = 'entrenos-copia';
 export const IMPORT_LIMITS = { fileBytes: 20_000_000, playBytes: 1_000_000, plays: 1000 };
 
 /** Contenido del archivo de copia de seguridad (se convierte a JSON para descargarlo). */
-export const backupData = (exercises: Exercise[]) => ({ format: BACKUP_FORMAT, version: 1, exportedAt: new Date().toISOString(), exercises });
+export const backupData = (exercises: Exercise[], sessions: Session[] = []) => ({ format: BACKUP_FORMAT, version: 1, exportedAt: new Date().toISOString(), exercises, sessions });
+
+/**
+ * Sesiones de una copia, con ids nuevos. Sus bloques apuntan a los ejercicios importados con sus
+ * ids nuevos (`newIds`: id antiguo → nuevo); si un ejercicio no venía en la copia, se usará la
+ * copia de respaldo que guarda el propio bloque.
+ */
+function sessionsFrom(raw: unknown, newIds: Map<string, string>): Session[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Session[] = [];
+  for (const r of raw.slice(0, IMPORT_LIMITS.plays)) {
+    const s = parseSession(r);
+    if (!s) continue;
+    const now = Date.now();
+    out.push({
+      ...s,
+      id: uid(),
+      blocks: s.blocks.map((b) => (b.kind === 'exercise' ? { ...b, id: uid(), exerciseId: newIds.get(b.exerciseId) ?? b.exerciseId } : { ...b, id: uid() })),
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+  return out;
+}
 
 /** Nombre del archivo de copia, con la fecha: `entrenos-copia-2026-11-11.json`. */
 export const backupFileName = (d = new Date()) => `entrenos-copia-${d.toISOString().slice(0, 10)}.json`;
@@ -38,6 +62,8 @@ export function exerciseFromPlay(play: Play): Exercise {
 
 export interface ImportResult {
   exercises: Exercise[];
+  /** Solo en copias de seguridad de esta app. */
+  sessions: Session[];
   /** Elementos del archivo que no se han podido leer. */
   skipped: number;
 }
@@ -60,32 +86,37 @@ export function exercisesFromData(data: unknown): ImportResult {
       }
     }
     if (!exercises.length) throw new Error('La copia no contiene jugadas válidas.');
-    return { exercises, skipped };
+    return { exercises, sessions: [], skipped };
   }
 
-  // copia de seguridad de esta app: varios ejercicios
+  // copia de seguridad de esta app: ejercicios y sesiones
   if (d.format === BACKUP_FORMAT && Array.isArray(d.exercises)) {
     const exercises: Exercise[] = [];
+    const newIds = new Map<string, string>();
     let skipped = 0;
     for (const raw of d.exercises.slice(0, IMPORT_LIMITS.plays)) {
       const e = raw && typeof raw === 'object' ? freshCopy(raw as Record<string, unknown>) : null;
-      if (e) exercises.push(e);
-      else skipped++;
+      if (e) {
+        exercises.push(e);
+        const oldId = (raw as Record<string, unknown>).id;
+        if (typeof oldId === 'string') newIds.set(oldId, e.id);
+      } else skipped++;
     }
-    if (!exercises.length) throw new Error('La copia no contiene ejercicios válidos.');
-    return { exercises, skipped };
+    const sessions = sessionsFrom(d.sessions, newIds);
+    if (!exercises.length && !sessions.length) throw new Error('La copia no contiene ejercicios ni sesiones válidos.');
+    return { exercises, sessions, skipped };
   }
 
   // ejercicio suelto de esta app (tiene `play` dentro)
   if ('play' in d) {
     const e = freshCopy(d);
     if (!e) throw new Error('El ejercicio del archivo está dañado.');
-    return { exercises: [e], skipped: 0 };
+    return { exercises: [e], sessions: [], skipped: 0 };
   }
 
   // jugada suelta de ATO
   try {
-    return { exercises: [exerciseFromPlay(parsePlay(data))], skipped: 0 };
+    return { exercises: [exerciseFromPlay(parsePlay(data))], sessions: [], skipped: 0 };
   } catch {
     throw new Error('El archivo no tiene el formato de una jugada ni de un ejercicio.');
   }

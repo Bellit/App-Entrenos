@@ -121,6 +121,37 @@ describe('sesión: tiempos', () => {
   });
 });
 
+describe('sesión: lista', () => {
+  const at = (title: string, date: string, startTime = '', updatedAt = 0) => ({ ...S.newSession(title, date), startTime, updatedAt });
+
+  it('agrupa en próximas (la más cercana primero), sin fecha y pasadas (la más reciente primero)', () => {
+    const list = [at('pasada vieja', '2026-10-01'), at('mañana', '2026-11-18'), at('sin fecha A', '', '', 1), at('hoy tarde', '2026-11-17', '19:00'), at('hoy pronto', '2026-11-17', '17:00'), at('pasada reciente', '2026-11-10'), at('sin fecha B', '', '', 2)];
+    const g = S.groupSessions(list, '2026-11-17');
+    expect(g.upcoming.map((s) => s.title)).toEqual(['hoy pronto', 'hoy tarde', 'mañana']);
+    expect(g.undated.map((s) => s.title)).toEqual(['sin fecha B', 'sin fecha A']);
+    expect(g.past.map((s) => s.title)).toEqual(['pasada reciente', 'pasada vieja']);
+  });
+
+  it('la fecha de hoy sale de la hora local', () => {
+    expect(S.todayISO(new Date(2026, 0, 5, 0, 30))).toBe('2026-01-05');
+  });
+
+  it('partes de la fecha en español', () => {
+    expect(S.dateParts('2026-11-17')).toMatchObject({ day: '17', month: 'nov', weekday: 'mar' });
+    expect(S.dateParts('2026-11-17')!.long).toBe('martes, 17 de noviembre de 2026');
+    expect(S.dateParts('')).toBeNull();
+  });
+
+  it('duplicar: misma estructura, ids nuevos y sin fecha', () => {
+    const s = S.addTextBlock(S.newSession('Martes', '2026-11-17'), 'Agua');
+    const c = S.duplicateSession(s);
+    expect(c.id).not.toBe(s.id);
+    expect(c.date).toBe('');
+    expect(c.title).toBe('Martes (copia)');
+    expect(c.blocks[0].id).not.toBe(s.blocks[0].id);
+  });
+});
+
 describe('sesión: leer datos de fuera', () => {
   it('una sesión guardada se lee igual', () => {
     let s = { ...S.newSession('Jueves', '2026-11-19'), startTime: '19:00', team: 'Cadete A', goal: 'Bloqueo directo' };
