@@ -13,9 +13,9 @@ export function BallMark({ size = 28 }: { size?: number }) {
 
 export function Brand() {
   return (
-    <a className="brand" href="#/" aria-label="Entrenos, ir a la biblioteca">
+    <a className="brand" href="#/" aria-label="Run it, ir a las sesiones">
       <BallMark />
-      <span className="brand-name">Entrenos</span>
+      <span className="brand-name">Run it</span>
     </a>
   );
 }

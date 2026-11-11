@@ -1,4 +1,4 @@
-# Entrenos
+# Run it
 # La pagina lleva <meta name="robots" content="noindex">: no aparece en buscadores.
 # Se permite el rastreo para que los buscadores puedan leer esa indicacion.
 User-agent: *

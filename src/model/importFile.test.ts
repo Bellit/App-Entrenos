@@ -61,7 +61,7 @@ describe('importar archivos como ejercicios', () => {
   });
 
   it('el archivo de copia lleva la fecha en el nombre', () => {
-    expect(backupFileName(new Date('2026-11-11T10:00:00Z'))).toBe('entrenos-copia-2026-11-11.json');
+    expect(backupFileName(new Date('2026-11-11T10:00:00Z'))).toBe('run-it-copia-2026-11-11.json');
   });
 
   it('rechaza lo que no es una jugada ni un ejercicio', () => {

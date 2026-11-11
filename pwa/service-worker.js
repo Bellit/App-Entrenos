@@ -1,5 +1,5 @@
 /*
- * Service worker de Entrenos: hace que la app funcione sin conexión.
+ * Service worker de Run it: hace que la app funcione sin conexión.
  *
  * Es un programa aparte que el navegador ejecuta en segundo plano y que se pone en medio de cada
  * petición de la web. Al instalarse guarda en una caché todos los archivos de la app (la lista la

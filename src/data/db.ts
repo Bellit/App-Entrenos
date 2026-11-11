@@ -11,6 +11,9 @@ class EntrenosDb extends Dexie {
   exercises!: EntityTable<Exercise, 'id'>;
   sessions!: EntityTable<Session, 'id'>;
   constructor() {
+    // El nombre interno sigue siendo «entrenos» aunque la app se llame Run it: si cambiara, cada
+    // navegador abriría una base de datos vacía y no encontraría lo ya guardado. Lo mismo pasa con
+    // las claves «entrenos.*» de localStorage y con el formato «entrenos-copia» de las copias.
     super('entrenos-bsk');
     // «&id» = clave primaria; «updatedAt» = índice para ordenar por lo último modificado
     this.version(1).stores({ exercises: '&id, updatedAt' });

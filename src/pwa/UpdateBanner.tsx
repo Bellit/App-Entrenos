@@ -7,7 +7,7 @@ export function UpdateBanner() {
   if (!updateReady) return null;
   return (
     <div className="update-banner" role="status">
-      <span>Hay una versión nueva de Entrenos.</span>
+      <span>Hay una versión nueva de Run it.</span>
       <button className="btn primary" onClick={applyUpdate}>
         Actualizar
       </button>

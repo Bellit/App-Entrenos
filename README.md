@@ -1,4 +1,6 @@
-# Entrenos
+# Run it
+
+*Practice plan*: la pareja de [ATO · Draw it up](https://ato-draw-it-up.pages.dev). En ATO se dibuja la jugada; en Run it se prepara el entreno y se ejecuta.
 
 App web para preparar entrenamientos de baloncesto: ejercicios con un dibujo animado (varios fotogramas) y su explicación, sesiones hechas con esos ejercicios y un modo entreno para seguirlas en el móvil.
 

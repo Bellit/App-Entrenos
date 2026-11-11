@@ -43,8 +43,8 @@ function sessionsFrom(raw: unknown, newIds: Map<string, string>): Session[] {
   return out;
 }
 
-/** Nombre del archivo de copia, con la fecha: `entrenos-copia-2026-11-11.json`. */
-export const backupFileName = (d = new Date()) => `entrenos-copia-${d.toISOString().slice(0, 10)}.json`;
+/** Nombre del archivo de copia, con la fecha: `run-it-copia-2026-11-11.json`. */
+export const backupFileName = (d = new Date()) => `run-it-copia-${d.toISOString().slice(0, 10)}.json`;
 
 /** Convierte un ejercicio leído de un archivo en uno nuevo (identificadores y fechas nuevos). */
 function freshCopy(raw: Record<string, unknown>): Exercise | null {
