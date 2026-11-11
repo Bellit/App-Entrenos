@@ -108,6 +108,7 @@ export function SessionEditor({ id }: { id: string }) {
         <a className="btn ghost back" href={routeHref.sessions} aria-label="Volver a las sesiones" title="Volver a las sesiones">
           <IconPrev /> <span className="back-text">Sesiones</span>
         </a>
+        <h1 className="sr-only">Sesión: {s.title || 'sin título'}</h1>
         <input className="sess-title" value={s.title} maxLength={S.SESSION_LIMITS.title} onChange={(e) => field('title')(e.target.value)} aria-label="Título de la sesión" placeholder="Título de la sesión" />
         <div className="head-actions">
           <SaveIndicator state={saveState} onRetry={retry} />

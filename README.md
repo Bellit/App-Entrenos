@@ -33,3 +33,15 @@ React 19, TypeScript, Vite 6, Zustand (estado de la pizarra), Dexie (IndexedDB, 
 - `src/features/exercises`: biblioteca y editor de ejercicios.
 - `src/data`: base de datos local.
 - `src/ui`: piezas de interfaz reutilizables.
+
+## Publicación
+
+Cloudflare Pages, conectado a este repositorio: **cada `git push` a `main` se publica solo**.
+
+- Comando de compilación: `npm run build` (comprueba tipos, pasa los tests y genera `dist/`; si algo falla, no se publica).
+- Carpeta de salida: `dist`.
+- Versión de Node: la del archivo `.node-version`.
+- Las cabeceras de seguridad y de caché van en `dist/_headers`, que genera `vite.config.ts`.
+- La web lleva `noindex`: no aparece en buscadores.
+
+Los datos (ejercicios y sesiones) se guardan en el navegador de cada dispositivo, no en el servidor. Para pasarlos de uno a otro, usa «Descargar copia de seguridad» e «Importar archivos…» en el menú «⋯».

@@ -93,6 +93,7 @@ export function ExerciseEditor({ id }: { id: string }) {
         <a className="btn ghost back" href={routeHref.library} aria-label="Volver a la biblioteca" title="Volver a la biblioteca">
           <IconPrev /> <span className="back-text">Ejercicios</span>
         </a>
+        <h1 className="sr-only">Ejercicio: {meta.title || 'sin título'}</h1>
         <input className="title-input" type="text" value={meta.title} maxLength={80} onChange={(e) => setMeta({ title: e.target.value })} aria-label="Título del ejercicio" placeholder="Título del ejercicio" />
         <div className="topbar-group end">
           <SaveIndicator state={saveState} onRetry={retry} />
