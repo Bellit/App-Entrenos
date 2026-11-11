@@ -38,7 +38,7 @@ React 19, TypeScript, Vite 6, Zustand (estado de la pizarra), Dexie (IndexedDB, 
 
 ## Publicación
 
-Cloudflare Pages, conectado a este repositorio: **cada `git push` a `main` se publica solo**.
+Publicada en **https://run-it-session.pages.dev** (Cloudflare Pages, conectado a este repositorio): **cada `git push` a `main` se publica solo**.
 
 - Comando de compilación: `npm run build` (comprueba tipos, pasa los tests y genera `dist/`; si algo falla, no se publica).
 - Carpeta de salida: `dist`.
