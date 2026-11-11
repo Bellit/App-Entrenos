@@ -69,6 +69,13 @@
 .save-state.error i {
   background: var(--danger);
 }
+.topbar .btn.retry {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 13px;
+  border-color: var(--danger);
+  color: var(--danger);
+}
 
 @media (max-width: 767px) {
   .back-text {

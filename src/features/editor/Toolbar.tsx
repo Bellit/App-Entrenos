@@ -31,7 +31,7 @@ export function Toolbar({ variant = 'column' }: { variant?: 'column' | 'bar' }) 
 
   const add = (team: Team) => {
     let id = '';
-    if (play.players.length >= P.LIMITS.players) return notify(`Una jugada admite como mucho ${P.LIMITS.players} jugadores.`);
+    if (play.players.length >= P.LIMITS.players) return notify(`Un ejercicio admite como mucho ${P.LIMITS.players} jugadores y objetos.`);
     edit((p) => (id = P.addPlayer(p, team, undefined, frame)));
     select({ kind: 'player', id });
     if (frame > 0) notify(`El jugador entra en el fotograma ${frame + 1}; en los anteriores no aparece.`);

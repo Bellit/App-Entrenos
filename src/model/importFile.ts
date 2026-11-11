@@ -3,7 +3,7 @@
  * Acepta tres formas de archivo .json:
  *  - una jugada suelta de ATO (`.jugada.json`),
  *  - una copia de seguridad de ATO (varias jugadas),
- *  - un ejercicio de esta app.
+ *  - un ejercicio de esta app o su copia de seguridad (todos los ejercicios).
  * Siempre se crean ejercicios con identificador nuevo: importar nunca pisa lo que ya hay.
  */
 import { uid } from './common';
@@ -12,7 +12,23 @@ import { parsePlay } from './parse';
 import type { Play } from './types';
 
 export const ATO_BACKUP_FORMAT = 'pizarra-jugadas-copia';
+/** Copia de seguridad de esta app: todos los ejercicios en un archivo. */
+export const BACKUP_FORMAT = 'entrenos-copia';
 export const IMPORT_LIMITS = { fileBytes: 20_000_000, playBytes: 1_000_000, plays: 1000 };
+
+/** Contenido del archivo de copia de seguridad (se convierte a JSON para descargarlo). */
+export const backupData = (exercises: Exercise[]) => ({ format: BACKUP_FORMAT, version: 1, exportedAt: new Date().toISOString(), exercises });
+
+/** Nombre del archivo de copia, con la fecha: `entrenos-copia-2026-11-11.json`. */
+export const backupFileName = (d = new Date()) => `entrenos-copia-${d.toISOString().slice(0, 10)}.json`;
+
+/** Convierte un ejercicio leído de un archivo en uno nuevo (identificadores y fechas nuevos). */
+function freshCopy(raw: Record<string, unknown>): Exercise | null {
+  const e = parseExercise({ ...raw, id: typeof raw.id === 'string' && raw.id ? raw.id : uid() });
+  if (!e) return null;
+  const now = Date.now();
+  return { ...e, id: uid(), play: { ...e.play, id: uid() }, createdAt: now, updatedAt: now };
+}
 
 /** Envuelve una jugada de ATO en un ejercicio nuevo: el nombre de la jugada pasa a ser el título. */
 export function exerciseFromPlay(play: Play): Exercise {
@@ -47,12 +63,24 @@ export function exercisesFromData(data: unknown): ImportResult {
     return { exercises, skipped };
   }
 
-  // ejercicio de esta app (tiene `play` dentro)
+  // copia de seguridad de esta app: varios ejercicios
+  if (d.format === BACKUP_FORMAT && Array.isArray(d.exercises)) {
+    const exercises: Exercise[] = [];
+    let skipped = 0;
+    for (const raw of d.exercises.slice(0, IMPORT_LIMITS.plays)) {
+      const e = raw && typeof raw === 'object' ? freshCopy(raw as Record<string, unknown>) : null;
+      if (e) exercises.push(e);
+      else skipped++;
+    }
+    if (!exercises.length) throw new Error('La copia no contiene ejercicios válidos.');
+    return { exercises, skipped };
+  }
+
+  // ejercicio suelto de esta app (tiene `play` dentro)
   if ('play' in d) {
-    const e = parseExercise({ ...d, id: typeof d.id === 'string' && d.id ? d.id : uid() });
+    const e = freshCopy(d);
     if (!e) throw new Error('El ejercicio del archivo está dañado.');
-    const now = Date.now();
-    return { exercises: [{ ...e, id: uid(), play: { ...e.play, id: uid() }, createdAt: now, updatedAt: now }], skipped: 0 };
+    return { exercises: [e], skipped: 0 };
   }
 
   // jugada suelta de ATO

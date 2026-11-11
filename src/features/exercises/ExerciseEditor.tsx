@@ -27,7 +27,7 @@ const SAVE_TEXT: Record<SaveState, string> = { saved: 'Guardado', saving: 'Guard
  * más el panel con los datos del ejercicio. En tablet y móvil el panel se pliega encima de la pista.
  */
 export function ExerciseEditor({ id }: { id: string }) {
-  const { status, meta, setMeta, saveState } = useExerciseDoc(id);
+  const { status, meta, setMeta, saveState, retry } = useExerciseDoc(id);
   usePlayback();
   useShortcuts();
   const presenting = useFullscreen();
@@ -44,9 +44,24 @@ export function ExerciseEditor({ id }: { id: string }) {
 
   // en pantallas pequeñas, al seleccionar algo en la pista se abre el panel para poder editarlo;
   // en móvil, al soltar el dedo y no en mitad de un arrastre (la pista cambia de tamaño al abrirlo)
+  // ¿hay un dedo (o botón del ratón) apretado ahora mismo?
+  const pressing = useRef(false);
+  useEffect(() => {
+    const down = () => (pressing.current = true);
+    const up = () => (pressing.current = false);
+    window.addEventListener('pointerdown', down, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', up, true);
+    return () => {
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', up, true);
+    };
+  }, []);
   useEffect(() => {
     if (!compact || !selection || !autoOpen.current) return;
-    if (!mobile) return setSideOpen(true);
+    // sin dedo apretado (p. ej. al añadir un jugador desde el menú «+»), se abre ya
+    if (!mobile || !pressing.current) return setSideOpen(true);
     const open = () => setSideOpen(true);
     window.addEventListener('pointerup', open, { once: true });
     return () => window.removeEventListener('pointerup', open);
@@ -84,10 +99,16 @@ export function ExerciseEditor({ id }: { id: string }) {
           <span className={`save-state ${saveState}`} role="status" aria-live="polite">
             <i aria-hidden="true" /> {SAVE_TEXT[saveState]}
           </span>
-          <button className="btn ghost icon" onClick={undo} disabled={!canUndo} aria-label="Deshacer" title="Deshacer (Ctrl+Z)">
+          {saveState === 'error' && (
+            <button className="btn retry" onClick={() => void retry()}>
+              Reintentar
+            </button>
+          )}
+          {/* deshacer y rehacer son del dibujo; en los campos de texto vale el Ctrl+Z del propio campo */}
+          <button className="btn ghost icon" onClick={undo} disabled={!canUndo} aria-label="Deshacer en el dibujo" title="Deshacer en el dibujo (Ctrl+Z)">
             <IconUndo />
           </button>
-          <button className="btn ghost icon" onClick={redo} disabled={!canRedo} aria-label="Rehacer" title="Rehacer (Ctrl+Y)">
+          <button className="btn ghost icon" onClick={redo} disabled={!canRedo} aria-label="Rehacer en el dibujo" title="Rehacer en el dibujo (Ctrl+Y)">
             <IconRedo />
           </button>
           {compact && (

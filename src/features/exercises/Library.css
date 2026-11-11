@@ -41,7 +41,31 @@
 
 .head-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+.head-actions .menu > .btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+/* aviso de copia de seguridad: texto y, debajo, sus dos acciones */
+.notice.backup {
+  display: grid;
+  gap: 10px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  color: var(--text);
+}
+.notice.backup p {
+  margin: 0;
+  line-height: 1.5;
+}
+.notice-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 .notice.ok {
   border-style: solid;
@@ -325,13 +349,6 @@
   }
   .brand-name {
     font-size: 21px;
-  }
-  /* en móvil «Importar» queda solo con el icono, para que quepan los dos botones */
-  .head-actions .btn-text {
-    display: none;
-  }
-  .head-actions .btn:not(.primary) {
-    padding: 0 12px;
   }
 }
 

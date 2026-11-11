@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newExercise } from './exercise';
-import { ATO_BACKUP_FORMAT, exercisesFromData } from './importFile';
+import { ATO_BACKUP_FORMAT, backupData, backupFileName, exercisesFromData } from './importFile';
 import * as P from './play';
 
 const atoPlay = (name = 'Mi jugada') => JSON.parse(JSON.stringify(P.newPlay(name)));
@@ -36,6 +36,21 @@ describe('importar archivos como ejercicios', () => {
     expect(r.exercises[0].tags).toEqual(['tiro']);
     expect(r.exercises[0].minutes).toBe(12);
     expect(r.exercises[0].id).not.toBe(e.id);
+  });
+
+  it('la copia de seguridad de la app se recupera entera, con identificadores nuevos', () => {
+    const a = newExercise('Uno');
+    const b = newExercise('Dos');
+    const data = JSON.parse(JSON.stringify(backupData([a, b])));
+    data.exercises.push({ roto: true });
+    const r = exercisesFromData(data);
+    expect(r.exercises.map((e) => e.title)).toEqual(['Uno', 'Dos']);
+    expect(r.skipped).toBe(1);
+    expect(r.exercises.some((e) => e.id === a.id || e.id === b.id)).toBe(false);
+  });
+
+  it('el archivo de copia lleva la fecha en el nombre', () => {
+    expect(backupFileName(new Date('2026-11-11T10:00:00Z'))).toBe('entrenos-copia-2026-11-11.json');
   });
 
   it('rechaza lo que no es una jugada ni un ejercicio', () => {

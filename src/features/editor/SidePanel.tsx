@@ -152,7 +152,7 @@ export function SidePanel({ head, extra, onClose }: { head?: React.ReactNode; ex
           <input type="range" min={0.6} max={4} step={0.1} value={f.duration} onChange={(e) => edit((p) => (p.frames[frame].duration = Number(e.target.value)), `duration:${f.id}`)} />
         </label>
         <label className="field">
-          <span>Nota (sale en el vídeo)</span>
+          <span>Nota de este fotograma</span>
           <textarea
             rows={2}
             maxLength={120}

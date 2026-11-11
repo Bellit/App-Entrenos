@@ -2,8 +2,8 @@ import { Component, type ReactNode } from 'react';
 import './ErrorBoundary.css';
 
 /**
- * Si algo falla al dibujar la jugada, en vez de dejar la página en blanco
- * muestra un aviso con salidas: abrir una jugada nueva o descargar la copia de seguridad.
+ * Si algo falla al dibujar, en vez de dejar la página en blanco
+ * muestra un aviso con una salida: volver a la biblioteca.
  */
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };

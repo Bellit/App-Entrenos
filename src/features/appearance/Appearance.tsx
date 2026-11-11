@@ -39,7 +39,7 @@ function TeamColor({ team, label }: { team: 'offense' | 'defense'; label: string
   );
 }
 
-/** Tema de la pista y colores de los equipos. Se aplica también a imágenes y vídeos. */
+/** Tema de la pista y colores de los equipos, para todos los ejercicios. */
 export function Appearance() {
   const pitch = useStore((s) => s.appearance.pitch);
   const setAppearance = useStore((s) => s.setAppearance);
@@ -57,7 +57,7 @@ export function Appearance() {
       </fieldset>
       <TeamColor team="offense" label="Ataque" />
       <TeamColor team="defense" label="Defensa" />
-      <p className="muted small">Se usa también en las imágenes y vídeos. Es una preferencia de este navegador.</p>
+      <p className="muted small">Se aplica a todos los ejercicios. Es una preferencia de este navegador.</p>
     </>
   );
 }

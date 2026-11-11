@@ -26,7 +26,7 @@ const thumbSig = (play: Play, k: number) => JSON.stringify([play.court, play.pla
 /** Barra de progreso: además de informar, se puede pulsar o arrastrar para ir a un instante. */
 function Progress({ play, elapsed, total }: { play: Play; elapsed: number; total: number }) {
   const { set } = useActions();
-  /** Va al instante `secs` (en segundos de la jugada) recorriendo los fotogramas. */
+  /** Va al instante `secs` (en segundos de la animación) recorriendo los fotogramas. */
   const seekAt = (secs: number) => {
     let left = Math.max(0, Math.min(total, secs));
     for (let k = 0; k < play.frames.length; k++) {
@@ -99,7 +99,7 @@ export function Timeline({ compact = false }: { compact?: boolean }) {
     warnRemoved(removed);
   };
   const duplicate = () => {
-    if (n >= P.LIMITS.frames) return notify(`Una jugada admite como mucho ${P.LIMITS.frames} fotogramas.`);
+    if (n >= P.LIMITS.frames) return notify(`Un ejercicio admite como mucho ${P.LIMITS.frames} fotogramas.`);
     let r = { index: frame, removed: 0 };
     edit((p) => (r = P.duplicateFrame(p, frame)));
     setFrame(r.index);
@@ -136,7 +136,7 @@ export function Timeline({ compact = false }: { compact?: boolean }) {
           <button className="btn ghost icon" onClick={() => setFrame(activeK - 1)} disabled={activeK <= 0} aria-label="Fotograma anterior" title="Fotograma anterior (←)">
             <IconPrev />
           </button>
-          <button className="btn primary play" onClick={togglePlay} aria-label={playing ? 'Pausar' : 'Reproducir jugada'} title="Reproducir / pausar (Espacio)">
+          <button className="btn primary play" onClick={togglePlay} aria-label={playing ? 'Pausar' : 'Reproducir el ejercicio'} title="Reproducir / pausar (Espacio)">
             {playing ? <IconPause /> : <IconPlay />}
           </button>
           <button className="btn ghost icon" onClick={() => setFrame(activeK + 1)} disabled={activeK >= n - 1} aria-label="Fotograma siguiente" title="Fotograma siguiente (→)">
@@ -200,12 +200,12 @@ export function Timeline({ compact = false }: { compact?: boolean }) {
           up
           items={[
             { label: 'Duplicar fotograma', hint: 'Repite sus acciones desde donde acaba', icon: <IconDuplicate />, onSelect: duplicate },
-            { label: 'Mover a la izquierda', hint: 'Antes en la jugada', icon: <IconPrev />, onSelect: () => reorder(frame, frame - 1), disabled: frame <= 0 },
-            { label: 'Mover a la derecha', hint: 'Después en la jugada', icon: <IconNext />, onSelect: () => reorder(frame, frame + 1), disabled: frame >= n - 1 },
+            { label: 'Mover a la izquierda', hint: 'Antes en el ejercicio', icon: <IconPrev />, onSelect: () => reorder(frame, frame - 1), disabled: frame <= 0 },
+            { label: 'Mover a la derecha', hint: 'Después en el ejercicio', icon: <IconNext />, onSelect: () => reorder(frame, frame + 1), disabled: frame >= n - 1 },
             ...(compact
               ? [
                   { label: `Velocidad: ${String(speed).replace('.', ',')}×`, hint: 'Toca para cambiarla', onSelect: () => set({ speed: SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length] }) },
-                  { label: loop ? 'Bucle: sí' : 'Bucle: no', hint: 'Repetir la jugada al acabar', onSelect: () => set({ loop: !loop }) },
+                  { label: loop ? 'Bucle: sí' : 'Bucle: no', hint: 'Repetir la animación al acabar', onSelect: () => set({ loop: !loop }) },
                 ]
               : []),
           ]}

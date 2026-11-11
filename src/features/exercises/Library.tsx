@@ -1,5 +1,8 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { readImportFile } from '../../model/importFile';
+import { backupData, backupFileName, readImportFile } from '../../model/importFile';
+import { requestPersistence, type StorageState, storageState } from '../../data/persistence';
+import { download } from '../../files';
+import { getItem, setItem } from '../../prefs';
 import { SceneSvg } from '../../court/Scene';
 import { usePalette } from '../../court/theme';
 import { deleteExercise, listExercises, saveExercise } from '../../data/db';
@@ -8,9 +11,12 @@ import * as P from '../../model/play';
 import { navigate, routeHref } from '../../app/useRoute';
 import { Brand } from '../../ui/Brand';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDuplicate, IconMore, IconPlus, IconSearch, IconTrash, IconUpload } from '../../ui/Icons';
+import { IconDownload, IconDuplicate, IconMore, IconPlus, IconSearch, IconTrash, IconUpload } from '../../ui/Icons';
 import { Menu } from '../../ui/Menu';
 import './Library.css';
+
+/** Hasta cuándo no se vuelve a mostrar el aviso de copia de seguridad (preferencia de este navegador). */
+const BACKUP_LATER_KEY = 'entrenos.copia.masTarde';
 
 /** Miniatura: el primer fotograma con sus líneas. Solo se redibuja si cambia el ejercicio. */
 const Thumb = memo(
@@ -29,7 +35,10 @@ export function Library() {
   const [category, setCategory] = useState<ExerciseCategory | ''>('');
   const [tag, setTag] = useState('');
   const [toDelete, setToDelete] = useState<Exercise | null>(null);
-  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  /** Aviso arriba de la lista: resultado de importar o un error al guardar o borrar. */
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [storage, setStorage] = useState<StorageState>('unknown');
+  const [backupLater, setBackupLater] = useState(() => Number(getItem(BACKUP_LATER_KEY)) > Date.now());
   const fileInput = useRef<HTMLInputElement>(null);
   const palette = usePalette();
 
@@ -39,25 +48,51 @@ export function Library() {
       .catch(() => setError(true));
   useEffect(() => {
     refresh();
+    storageState().then(setStorage);
   }, []);
+
+  /** Ejecuta una acción de guardado; si falla, lo dice en vez de no hacer nada. */
+  const guarded = (what: string, action: () => Promise<unknown>) => async () => {
+    try {
+      await action();
+    } catch {
+      setMessage({ ok: false, text: `No se ha podido ${what}. Puede que el navegador no deje guardar (modo privado o sin espacio).` });
+    }
+  };
+  /** Al crear o importar (un clic), se pide al navegador que no borre los datos. */
+  const protect = () => requestPersistence().then((ok) => ok && setStorage('persisted'));
+
+  const downloadBackup = guarded('preparar la copia', async () => {
+    const all = await listExercises();
+    download(new Blob([JSON.stringify(backupData(all), null, 2)], { type: 'application/json' }), backupFileName());
+    remindBackupLater();
+  });
+  /** «Más tarde»: el aviso de copia se oculta una semana. */
+  const remindBackupLater = () => {
+    setItem(BACKUP_LATER_KEY, String(Date.now() + 7 * 24 * 3600 * 1000));
+    setBackupLater(true);
+  };
 
   const allTags = useMemo(() => [...new Set((list ?? []).flatMap((e) => e.tags))].sort(), [list]);
   const shown = (list ?? []).filter((e) => matchesFilters(e, query, category, tag));
   const countOf = (c: ExerciseCategory) => (list ?? []).filter((e) => e.category === c).length;
   const filtering = !!(query || category || tag);
 
-  const create = async () => {
+  const create = guarded('crear el ejercicio', async () => {
+    protect();
     const e = newExercise();
     await saveExercise(e);
     navigate(routeHref.exercise(e.id));
-  };
-  const duplicate = async (e: Exercise) => {
-    await saveExercise(duplicateExercise(e));
-    refresh();
-  };
-  /** Importa uno o varios archivos .json (jugadas de ATO, copias de ATO o ejercicios) como ejercicios nuevos. */
+  });
+  const duplicate = (e: Exercise) =>
+    guarded('duplicar el ejercicio', async () => {
+      await saveExercise(duplicateExercise(e));
+      refresh();
+    })();
+  /** Importa uno o varios archivos .json (jugadas de ATO, copias o ejercicios) como ejercicios nuevos. */
   const importFiles = async (files: FileList | null) => {
     if (!files?.length) return;
+    protect();
     let added = 0;
     let skipped = 0;
     const problems: string[] = [];
@@ -74,24 +109,34 @@ export function Library() {
     if (fileInput.current) fileInput.current.value = ''; // permite volver a elegir el mismo archivo
     const parts = [];
     if (added) parts.push(added === 1 ? 'Se ha importado 1 ejercicio.' : `Se han importado ${added} ejercicios.`);
-    if (skipped) parts.push(skipped === 1 ? 'Se ha saltado 1 jugada dañada.' : `Se han saltado ${skipped} jugadas dañadas.`);
-    setImportMsg({ ok: added > 0 && problems.length === 0, text: [...parts, ...problems].join(' ') });
+    if (skipped) parts.push(skipped === 1 ? 'Se ha saltado 1 elemento dañado.' : `Se han saltado ${skipped} elementos dañados.`);
+    setMessage({ ok: added > 0 && problems.length === 0, text: [...parts, ...problems].join(' ') });
     refresh();
   };
-  const remove = async (e: Exercise) => {
-    await deleteExercise(e.id);
-    setToDelete(null);
-    refresh();
-  };
+  const remove = (e: Exercise) =>
+    guarded('eliminar el ejercicio', async () => {
+      setToDelete(null);
+      await deleteExercise(e.id);
+      refresh();
+    })();
+
+  const showBackupNotice = storage === 'at-risk' && !backupLater && !!list && list.length > 0;
 
   return (
     <div className="page">
       <header className="page-head">
         <Brand />
         <div className="head-actions">
-          <button className="btn big" onClick={() => fileInput.current?.click()} title="Importar jugadas de ATO (.jugada.json) o ejercicios" aria-label="Importar jugadas o ejercicios">
-            <IconUpload /> <span className="btn-text">Importar</span>
-          </button>
+          <Menu
+            iconOnly
+            label="Importar y copias de seguridad"
+            title="Importar y copias de seguridad"
+            icon={<IconMore />}
+            items={[
+              { label: 'Importar archivos…', hint: 'Jugadas de ATO, ejercicios o una copia', icon: <IconUpload />, onSelect: () => fileInput.current?.click() },
+              { label: 'Descargar copia de seguridad', hint: 'Todos los ejercicios en un archivo', icon: <IconDownload />, onSelect: downloadBackup, disabled: !list?.length },
+            ]}
+          />
           <button className="btn primary big" onClick={create}>
             <IconPlus /> Nuevo ejercicio
           </button>
@@ -105,13 +150,30 @@ export function Library() {
           {list && list.length > 0 && <p className="muted">{list.length === 1 ? '1 ejercicio guardado' : `${list.length} ejercicios guardados`}</p>}
         </div>
 
-        {importMsg && (
-          <p className={`notice${importMsg.ok ? ' ok' : ' error'}`} role="status">
-            {importMsg.text}{' '}
-            <button className="link" onClick={() => setImportMsg(null)}>
+        {message && (
+          <p className={`notice${message.ok ? ' ok' : ' error'}`} role="status">
+            {message.text}{' '}
+            <button className="link" onClick={() => setMessage(null)}>
               Cerrar
             </button>
           </p>
+        )}
+
+        {showBackupNotice && (
+          <div className="notice backup" role="note">
+            <p>
+              <strong>Tus ejercicios solo están en este navegador.</strong> Si se queda sin espacio, o en iPhone si pasas una semana sin abrir la app, podría borrarlos. Guarda una copia de vez en cuando
+              (o añade la app a la pantalla de inicio).
+            </p>
+            <div className="notice-actions">
+              <button className="btn" onClick={downloadBackup}>
+                <IconDownload /> Descargar copia
+              </button>
+              <button className="link" onClick={remindBackupLater}>
+                Más tarde
+              </button>
+            </div>
+          </div>
         )}
 
         {error && (
@@ -224,7 +286,7 @@ export function Library() {
           title="Eliminar ejercicio"
           message={
             <p>
-              Se eliminará «{toDelete.title}» de este dispositivo y no se puede deshacer. Las sesiones que lo usen perderán ese bloque.
+              Se eliminará «{toDelete.title}» de este dispositivo y no se puede deshacer.
             </p>
           }
           confirmLabel="Eliminar"
