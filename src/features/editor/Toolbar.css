@@ -77,7 +77,7 @@
   border-radius: 5px;
 }
 
-/* material de pista: cono, entrenador y balón extra */
+/* material de pista: cono, entrenador y balón (el cono es un triángulo hecho con bordes) */
 .chip-c {
   background: none;
   position: relative;

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "src/features/editor/Toolbar.css"
+        ],
+        "createdAt": "2026-11-11T22:15:07.703Z",
+        "reason": "Claude triage: L91 is the zero-size CSS border triangle that draws the cone icon (.chip-c::before), not an accent border on a rounded card"
+      }
+    ]
+  }
+}
