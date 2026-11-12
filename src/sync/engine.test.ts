@@ -4,7 +4,7 @@ import { type Local, type Remote, type RemoteRow, syncOnce } from './engine';
 
 /** Una nube de mentira: guarda filas por tipo y les pone la «hora del servidor» al llegar. */
 function fakeCloud() {
-  const rows: Record<Kind, Map<string, RemoteRow>> = { exercises: new Map(), sessions: new Map() };
+  const rows: Record<Kind, Map<string, RemoteRow>> = { exercises: new Map(), sessions: new Map(), squads: new Map() };
   let clock = 0;
   const remote: Remote = {
     async pull(kind, since) {
@@ -19,7 +19,7 @@ function fakeCloud() {
 
 /** Un dispositivo de mentira, con las mismas reglas que db.ts (cola de salida, aplicar sin anotar). */
 function fakeDevice() {
-  const docs: Record<Kind, Map<string, { id: string; updatedAt: number; title: string }>> = { exercises: new Map(), sessions: new Map() };
+  const docs: Record<Kind, Map<string, { id: string; updatedAt: number; title: string }>> = { exercises: new Map(), sessions: new Map(), squads: new Map() };
   const outbox = new Map<string, OutboxEntry>();
   const meta = new Map<string, string>();
   let t = 1000;

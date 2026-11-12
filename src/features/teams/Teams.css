@@ -1,0 +1,81 @@
+/* Pantalla de equipos */
+
+.team-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.team-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 14px 18px;
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--team);
+  border-radius: 14px;
+  background: var(--panel);
+}
+.team-main {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.team-name,
+.team-club {
+  border-color: transparent !important;
+  background: transparent !important;
+  padding-left: 6px !important;
+  margin-left: -6px;
+}
+.team-name:hover,
+.team-club:hover,
+.team-name:focus,
+.team-club:focus {
+  border-color: var(--border) !important;
+  background: var(--bg) !important;
+}
+.team-name {
+  font-family: var(--font-title);
+  font-size: 24px !important;
+  font-weight: 700;
+}
+.team-club {
+  color: var(--muted);
+}
+.team-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.swatch.on {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--bg) inset;
+}
+.team-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.team-side .btn {
+  text-decoration: none;
+}
+
+@media (pointer: coarse) {
+  .swatch {
+    width: 36px;
+    height: 36px;
+  }
+}

@@ -7,6 +7,7 @@ import { SessionEditor } from '../features/sessions/SessionEditor';
 import { TrainingMode } from '../features/training/TrainingMode';
 import { Privacy } from '../features/legal/Privacy';
 import { Inbox } from '../features/shared/Inbox';
+import { Teams } from '../features/teams/Teams';
 import { SharedLink } from '../features/shared/SharedLink';
 import { type Route, useRoute } from './useRoute';
 
@@ -19,6 +20,8 @@ function Screen({ route }: { route: Route }) {
       return <SessionEditor key={route.id} id={route.id} />;
     case 'training':
       return <TrainingMode key={route.id} id={route.id} />;
+    case 'teams':
+      return <Teams />;
     case 'inbox':
       return <Inbox />;
     case 'shared':

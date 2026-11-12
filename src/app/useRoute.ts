@@ -6,6 +6,7 @@ import { useSyncExternalStore } from 'react';
  *   #/sesion/<id>         → una sesión
  *   #/entreno/<id>        → modo entreno de una sesión (pantalla a pantalla)
  *   #/ejercicios          → biblioteca de ejercicios
+ *   #/equipos             → equipos
  *   #/privacidad          → política de privacidad
  *   #/compartido          → compartido conmigo y lo que he compartido
  *   #/c/<código>          → algo compartido por enlace
@@ -13,10 +14,11 @@ import { useSyncExternalStore } from 'react';
  * Se usa el hash y no rutas normales porque la app es una web estática: no hace falta configurar
  * el servidor para que cualquier dirección devuelva la misma página.
  */
-export type Route = { name: 'sessions' } | { name: 'session'; id: string } | { name: 'training'; id: string } | { name: 'library' } | { name: 'privacy' } | { name: 'inbox' } | { name: 'shared'; id: string } | { name: 'exercise'; id: string };
+export type Route = { name: 'sessions' } | { name: 'session'; id: string } | { name: 'training'; id: string } | { name: 'library' } | { name: 'teams' } | { name: 'privacy' } | { name: 'inbox' } | { name: 'shared'; id: string } | { name: 'exercise'; id: string };
 
 export function parseRoute(hash: string): Route {
   if (hash === '#/ejercicios') return { name: 'library' };
+  if (hash === '#/equipos') return { name: 'teams' };
   if (hash === '#/privacidad') return { name: 'privacy' };
   if (hash === '#/compartido') return { name: 'inbox' };
   const c = /^#\/c\/([A-Za-z0-9]{8,32})$/.exec(hash);
@@ -33,6 +35,7 @@ export const routeHref = {
   session: (id: string) => `#/sesion/${id}`,
   training: (id: string) => `#/entreno/${id}`,
   library: '#/ejercicios',
+  teams: '#/equipos',
   privacy: '#/privacidad',
   inbox: '#/compartido',
   shared: (id: string) => `#/c/${id}`,

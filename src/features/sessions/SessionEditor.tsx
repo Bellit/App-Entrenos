@@ -7,6 +7,8 @@ import { ExercisePicker } from './ExercisePicker';
 import { SessionBlocks } from './SessionBlocks';
 import { useSessionDoc } from './useSessionDoc';
 import { SessionReviewCard } from './SessionReviewCard';
+import { useSquads } from '../teams/useSquads';
+import { squadLabel } from '../../model/squad';
 import { saveSession } from '../../data/db';
 import '../../ui/Page.css';
 import './SessionEditor.css';
@@ -30,7 +32,8 @@ function TimeBar({ session }: { session: S.Session }) {
  * abre a pantalla completa con el botón «Añadir». Todo se guarda solo.
  */
 export function SessionEditor({ id }: { id: string }) {
-  const { status, session: s, update, library, teams, saveState, retry } = useSessionDoc(id);
+  const { status, session: s, update, library, saveState, retry } = useSessionDoc(id);
+  const { squads } = useSquads();
   const [picking, setPicking] = useState(false);
   /** Aviso corto abajo («Añadido…», «Bloque quitado» con «Deshacer»). */
   const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null);
@@ -152,13 +155,22 @@ export function SessionEditor({ id }: { id: string }) {
               <input type="time" value={s.startTime} onChange={(e) => field('startTime')(e.target.value)} />
             </label>
             <label className="field">
-              <span>Equipo</span>
-              <input value={s.team} maxLength={S.SESSION_LIMITS.team} list="equipos" placeholder="Ej.: Cadete A" onChange={(e) => field('team')(e.target.value)} />
-              <datalist id="equipos">
-                {teams.map((t) => (
-                  <option key={t} value={t} />
+              <span>
+                Equipo
+                <a className="field-link" href={routeHref.teams}>
+                  {squads?.length ? 'Gestionar' : 'Crear equipos'}
+                </a>
+              </span>
+              <select value={s.teamId} onChange={(e) => update((x) => ({ ...x, teamId: e.target.value }))}>
+                <option value="">Sin equipo</option>
+                {squads?.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {squadLabel(t)}
+                  </option>
                 ))}
-              </datalist>
+              </select>
+              {/* lo que se escribía a mano antes de existir los equipos, para no perderlo */}
+              {!s.teamId && s.team && <small className="muted">Escrito antes: «{s.team}»</small>}
             </label>
             <label className="field wide">
               <span>Objetivo</span>

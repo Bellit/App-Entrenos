@@ -15,7 +15,7 @@
  */
 import type { Kind, OutboxEntry } from '../data/db';
 
-export const KINDS: Kind[] = ['exercises', 'sessions'];
+export const KINDS: Kind[] = ['exercises', 'sessions', 'squads'];
 
 export interface RemoteRow {
   id: string;

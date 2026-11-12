@@ -8,7 +8,7 @@ import './Page.css';
  * Cabecera de las páginas principales: la marca, las pestañas para cambiar entre Sesiones y
  * Ejercicios, y las acciones de la página (a la derecha). En móvil, las pestañas bajan a una fila propia.
  */
-export function PageHeader({ current, actions }: { current: 'sessions' | 'library'; actions: ReactNode }) {
+export function PageHeader({ current, actions }: { current: 'sessions' | 'library' | 'teams'; actions: ReactNode }) {
   return (
     <header className="page-head">
       <Brand />
@@ -18,6 +18,9 @@ export function PageHeader({ current, actions }: { current: 'sessions' | 'librar
         </a>
         <a href={routeHref.library} aria-current={current === 'library' ? 'page' : undefined}>
           Ejercicios
+        </a>
+        <a href={routeHref.teams} aria-current={current === 'teams' ? 'page' : undefined}>
+          Equipos
         </a>
       </nav>
       <InboxButton />

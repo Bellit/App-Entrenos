@@ -115,6 +115,7 @@ async function adopt(id: string) {
   if ((await syncLocal.getMeta('user')) === id) return;
   await syncLocal.delMeta('cursor.exercises');
   await syncLocal.delMeta('cursor.sessions');
+  await syncLocal.delMeta('cursor.squads');
   await syncLocal.markAll();
   await syncLocal.setMeta('user', id);
 }

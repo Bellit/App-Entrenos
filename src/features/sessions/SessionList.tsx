@@ -6,6 +6,10 @@ import * as S from '../../model/session';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { IconDuplicate, IconFile, IconMore, IconPlay, IconPlus, IconShare, IconTrash } from '../../ui/Icons';
 import { Dialog } from '../../ui/Dialog';
+import { type Squad, squadLabel } from '../../model/squad';
+import { useSquads } from '../teams/useSquads';
+import { TEAM_FILTER_KEY } from '../teams/Teams';
+import { getItem, setItem } from '../../prefs';
 import { sessionPayload } from '../../model/share';
 import { ShareDialog } from '../../sync/ShareDialog';
 import { Menu } from '../../ui/Menu';
@@ -14,7 +18,7 @@ import { useDataTools } from '../data/useDataTools';
 import './SessionList.css';
 
 /** Una sesión en la lista: la fecha bien visible a la izquierda, y título, horario y bloques. */
-function SessionCard({ s, today, onDuplicate, onDelete, onShare, onTemplate, onUse }: { s: S.Session; today: string; onDuplicate: () => void; onDelete: () => void; onShare: () => void; onTemplate: () => void; onUse: () => void }) {
+function SessionCard({ s, today, squad, onDuplicate, onDelete, onShare, onTemplate, onUse }: { s: S.Session; today: string; squad?: Squad; onDuplicate: () => void; onDelete: () => void; onShare: () => void; onTemplate: () => void; onUse: () => void }) {
   const d = S.dateParts(s.date);
   const total = S.totalMinutes(s);
   const end = S.endTime(s);
@@ -38,7 +42,13 @@ function SessionCard({ s, today, onDuplicate, onDelete, onShare, onTemplate, onU
         <div className="session-body">
           <h3>{s.title || 'Sin título'}</h3>
           <p className="session-meta">
-            {s.team && <span>{s.team}</span>}
+            {squad ? (
+              <span className="session-team" style={{ ['--team' as string]: squad.color }}>
+                {squadLabel(squad)}
+              </span>
+            ) : (
+              s.team && <span>{s.team}</span>
+            )}
             {s.startTime && <span>{end ? `${s.startTime}–${end}` : s.startTime}</span>}
             <span>{total ? S.formatDuration(total) : 'Sin bloques'}</span>
             {s.blocks.length > 0 && <span>{s.blocks.length === 1 ? '1 bloque' : `${s.blocks.length} bloques`}</span>}
@@ -91,6 +101,17 @@ export function SessionList() {
   const [choosing, setChoosing] = useState(false);
   const [notice, setNotice] = useState('');
   const today = S.todayISO();
+  const { squads } = useSquads();
+  // equipo elegido ('' = todos, 'none' = sin equipo): se recuerda en este navegador
+  const [teamFilter, setTeamFilterState] = useState(() => getItem(TEAM_FILTER_KEY) ?? '');
+  const setTeamFilter = (v: string) => {
+    setTeamFilterState(v);
+    setItem(TEAM_FILTER_KEY, v);
+  };
+  const squadById = useMemo(() => new Map((squads ?? []).map((t) => [t.id, t])), [squads]);
+  // si el equipo elegido ya no existe (se borró), se vuelve a «todos»
+  const filter = teamFilter && teamFilter !== 'none' && squads && !squadById.has(teamFilter) ? '' : teamFilter;
+  const teamForNew = filter && filter !== 'none' ? filter : '';
 
   const refresh = () => {
     listSessions()
@@ -108,14 +129,16 @@ export function SessionList() {
   const data = useDataTools({ hasData: !!list?.length || exerciseCount > 0, onChanged: refresh });
   const { guarded, protect } = data;
 
-  const groups = useMemo(() => S.groupSessions(list ?? [], today), [list, today]);
+  const groups = useMemo(() => S.groupSessions(S.filterByTeam(list ?? [], filter), today), [list, today, filter]);
+  const countFor = (f: string) => S.filterByTeam(list ?? [], f).filter((x) => !x.template).length;
 
   /** Nueva sesión: en blanco o, si se elige, a partir de una plantilla. */
   const createFrom = (template: S.Session | null) =>
     guarded('crear la sesión', async () => {
       protect();
       setChoosing(false);
-      const s = template ? S.fromTemplate(template, today) : S.newSession('Sesión nueva', today);
+      // con un equipo elegido en la lista, la sesión nueva ya es de ese equipo
+      const s = template ? { ...S.fromTemplate(template, today), teamId: template.teamId || teamForNew } : S.newSession('Sesión nueva', today, teamForNew);
       await saveSession(s);
       navigate(routeHref.session(s.id));
     })();
@@ -147,7 +170,7 @@ export function SessionList() {
         </h2>
         <ul className="session-cards">
           {items.map((s) => (
-            <SessionCard key={s.id} s={s} today={today} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} onTemplate={() => saveTemplate(s)} onUse={() => createFrom(s)} />
+            <SessionCard key={s.id} s={s} today={today} squad={squadById.get(s.teamId)} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} onTemplate={() => saveTemplate(s)} onUse={() => createFrom(s)} />
           ))}
         </ul>
       </section>
@@ -174,13 +197,31 @@ export function SessionList() {
           {list && list.length > 0 && (
             <p className="muted">
               {(() => {
-                const n = list.length - groups.templates.length;
+                const n = groups.upcoming.length + groups.undated.length + groups.past.length;
                 return n === 1 ? '1 sesión' : `${n} sesiones`;
               })()}
               {groups.templates.length > 0 && ` · ${groups.templates.length === 1 ? '1 plantilla' : `${groups.templates.length} plantillas`}`}
             </p>
           )}
         </div>
+
+        {squads && squads.length > 0 && list && list.length > 0 && (
+          <div className="chips team-chips" role="radiogroup" aria-label="Equipo">
+            <button role="radio" aria-checked={filter === ''} className={`filter-chip${filter === '' ? ' on' : ''}`} onClick={() => setTeamFilter('')}>
+              Todos <span className="filter-chip-count">{countFor('')}</span>
+            </button>
+            {squads.map((t) => (
+              <button key={t.id} role="radio" aria-checked={filter === t.id} className={`filter-chip team-chip${filter === t.id ? ' on' : ''}`} style={{ ['--team' as string]: t.color }} onClick={() => setTeamFilter(t.id)}>
+                {squadLabel(t)} <span className="filter-chip-count">{countFor(t.id)}</span>
+              </button>
+            ))}
+            {countFor('none') > 0 && (
+              <button role="radio" aria-checked={filter === 'none'} className={`filter-chip${filter === 'none' ? ' on' : ''}`} onClick={() => setTeamFilter('none')}>
+                Sin equipo <span className="filter-chip-count">{countFor('none')}</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {data.notices}
         {notice && (
@@ -227,6 +268,16 @@ export function SessionList() {
         {section('Sin fecha', groups.undated)}
         {section('Pasadas', groups.past)}
         {section('Plantillas', groups.templates)}
+        {list && list.length > 0 && filter && !groups.upcoming.length && !groups.undated.length && !groups.past.length && (
+          <p className="notice">
+            {filter === 'none' ? 'No hay sesiones sin equipo.' : `${squadLabel(squadById.get(filter)!)} aún no tiene sesiones.`}{' '}
+            {filter !== 'none' && (
+              <button className="link" onClick={create}>
+                Crear la primera
+              </button>
+            )}
+          </p>
+        )}
       </main>
 
       <ShareDialog

@@ -249,3 +249,26 @@
 .template-pick small {
   color: var(--muted);
 }
+
+/* equipos: chips para filtrar y el equipo de cada sesión, con su color */
+.team-chips {
+  margin-bottom: 18px;
+}
+.team-chip::before,
+.session-team::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--team);
+  vertical-align: 1px;
+}
+.team-chip.on::before {
+  box-shadow: 0 0 0 2px var(--accent-ink);
+}
+.session-team {
+  color: var(--text);
+  font-weight: 600;
+}

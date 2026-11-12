@@ -10,8 +10,9 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { type Exercise, parseExercise } from '../model/exercise';
 import { parseSession, type Session } from '../model/session';
+import { parseSquad, type Squad } from '../model/squad';
 
-export type Kind = 'exercises' | 'sessions';
+export type Kind = 'exercises' | 'sessions' | 'squads';
 
 /** Un cambio pendiente de subir. `at` = cuándo se anotó (para no borrar uno anotado de nuevo mientras se subía). */
 export interface OutboxEntry {
@@ -26,6 +27,7 @@ export interface OutboxEntry {
 class EntrenosDb extends Dexie {
   exercises!: EntityTable<Exercise, 'id'>;
   sessions!: EntityTable<Session, 'id'>;
+  squads!: EntityTable<Squad, 'id'>;
   outbox!: EntityTable<OutboxEntry, 'key'>;
   meta!: EntityTable<{ key: string; value: string }, 'key'>;
   constructor() {
@@ -41,6 +43,8 @@ class EntrenosDb extends Dexie {
     // versión 3: sincronización. `outbox` = cambios pendientes de subir; `meta` = datos de la
     // sincronización (hasta dónde se ha bajado de la nube, con qué cuenta).
     this.version(3).stores({ exercises: '&id, updatedAt', sessions: '&id, updatedAt, date', outbox: '&key, kind', meta: '&key' });
+    // versión 4: equipos
+    this.version(4).stores({ exercises: '&id, updatedAt', sessions: '&id, updatedAt, date', squads: '&id', outbox: '&key, kind', meta: '&key' });
   }
 }
 
@@ -126,15 +130,46 @@ export async function deleteSession(id: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Equipos
+// ---------------------------------------------------------------------------
+
+export async function listSquads(): Promise<Squad[]> {
+  const rows = await db.squads.toArray();
+  return rows.map(parseSquad).filter((t): t is Squad => t !== null);
+}
+
+export async function saveSquad(t: Squad): Promise<void> {
+  await db.transaction('rw', db.squads, db.outbox, async () => {
+    await db.squads.put(t);
+    await mark('squads', t.id);
+  });
+  changed();
+}
+
+/** Borra un equipo. Sus sesiones no se borran: se quedan sin equipo. */
+export async function deleteSquad(id: string): Promise<void> {
+  await db.transaction('rw', db.squads, db.sessions, db.outbox, async () => {
+    await db.squads.delete(id);
+    await mark('squads', id, true);
+    const mine = await db.sessions.filter((s) => s.teamId === id).toArray();
+    for (const s of mine) {
+      await db.sessions.put({ ...s, teamId: '', updatedAt: Date.now() });
+      await mark('sessions', s.id);
+    }
+  });
+  changed();
+}
+
+// ---------------------------------------------------------------------------
 // Para el motor de sincronización (src/sync/engine.ts)
 // ---------------------------------------------------------------------------
 
-const table = (kind: Kind) => (kind === 'exercises' ? db.exercises : db.sessions);
-const parse = (kind: Kind, raw: unknown) => (kind === 'exercises' ? parseExercise(raw) : parseSession(raw));
+const table = (kind: Kind) => (kind === 'exercises' ? db.exercises : kind === 'sessions' ? db.sessions : db.squads);
+const parse = (kind: Kind, raw: unknown) => (kind === 'exercises' ? parseExercise(raw) : kind === 'sessions' ? parseSession(raw) : parseSquad(raw));
 
 export const syncLocal = {
   /** El documento guardado aquí (sin validar: se sube tal cual está). */
-  get: (kind: Kind, id: string) => table(kind).get(id) as Promise<(Exercise | Session) | undefined>,
+  get: (kind: Kind, id: string) => (table(kind) as EntityTable<{ id: string; updatedAt: number }, 'id'>).get(id),
   outbox: () => db.outbox.toArray(),
   /** Quita de la cola lo ya subido, salvo lo que se haya vuelto a cambiar mientras tanto. */
   async clearOutbox(entries: OutboxEntry[]) {
@@ -158,12 +193,12 @@ export const syncLocal = {
     const doc = parse(kind, data);
     if (!doc || doc.id !== id) return false; // dañado o manipulado: se ignora
     if (current?.updatedAt === doc.updatedAt) return false; // es lo mismo que ya hay
-    await (t as EntityTable<Exercise | Session, 'id'>).put(doc);
+    await (t as EntityTable<Exercise | Session | Squad, 'id'>).put(doc);
     return true;
   },
   /** Anota TODO lo que hay en este dispositivo para subirlo (la primera vez que se entra). */
   async markAll() {
-    for (const kind of ['exercises', 'sessions'] as Kind[]) {
+    for (const kind of ['exercises', 'sessions', 'squads'] as Kind[]) {
       const ids = (await table(kind).toCollection().primaryKeys()) as string[];
       for (const id of ids) await mark(kind, id);
     }

@@ -675,3 +675,11 @@
     transform: none;
   }
 }
+
+.field-link {
+  font-size: 12px;
+  color: var(--accent);
+}
+.sess-fields select {
+  min-height: 40px;
+}

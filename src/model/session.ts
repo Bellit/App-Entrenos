@@ -46,6 +46,9 @@ export interface Session {
   date: string;
   /** Hora de inicio `HH:MM`, o vacía. */
   startTime: string;
+  /** Equipo de la sesión (id de un Squad, ver squad.ts), o vacío. */
+  teamId: string;
+  /** Texto libre de antes de existir los equipos (se conserva para no perderlo). */
   team: string;
   /** Objetivo de la sesión. */
   goal: string;
@@ -72,9 +75,9 @@ export const EMPTY_REVIEW: SessionReview = { done: false, rating: 0, notes: '' }
 // Crear y editar
 // ---------------------------------------------------------------------------
 
-export function newSession(title = 'Sesión nueva', date = ''): Session {
+export function newSession(title = 'Sesión nueva', date = '', teamId = ''): Session {
   const now = Date.now();
-  return { version: 1, id: uid(), title, date, startTime: '', team: '', goal: '', notes: '', blocks: [], template: false, review: { ...EMPTY_REVIEW }, createdAt: now, updatedAt: now };
+  return { version: 1, id: uid(), title, date, startTime: '', teamId, team: '', goal: '', notes: '', blocks: [], template: false, review: { ...EMPTY_REVIEW }, createdAt: now, updatedAt: now };
 }
 
 /** Cambia lo de después del entreno. Escribir notas o valorar marca la sesión como hecha. */
@@ -256,6 +259,16 @@ export function groupSessions(list: Session[], today: string) {
   };
 }
 
+/**
+ * Filtro de la lista por equipo: '' = todas, 'none' = sin equipo, o el id de un equipo.
+ * Las plantillas sin equipo se ven siempre (sirven para cualquiera).
+ */
+export function filterByTeam(list: Session[], filter: string): Session[] {
+  if (!filter) return list;
+  if (filter === 'none') return list.filter((s) => !s.teamId);
+  return list.filter((s) => s.teamId === filter || (s.template && !s.teamId));
+}
+
 /** Copia de una sesión con id nuevo (para «Duplicar»): misma estructura, sin fecha ni notas del entreno. */
 export const duplicateSession = (s: Session): Session => copyOf(s, { title: `${s.title} (copia)`.slice(0, SESSION_LIMITS.title), date: '' });
 
@@ -311,6 +324,7 @@ export function parseSession(raw: unknown): Session | null {
     title: text(raw.title, SESSION_LIMITS.title, 'Sesión'),
     date: isDate(raw.date) ? raw.date : '',
     startTime: isTime(raw.startTime) ? raw.startTime : '',
+    teamId: typeof raw.teamId === 'string' && ID_RE.test(raw.teamId) ? raw.teamId : '',
     team: text(raw.team, SESSION_LIMITS.team),
     goal: text(raw.goal, SESSION_LIMITS.goal),
     notes: text(raw.notes, SESSION_LIMITS.notes),
