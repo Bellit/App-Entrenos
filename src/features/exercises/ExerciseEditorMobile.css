@@ -52,7 +52,7 @@
 .app.mobile .hint {
   display: none;
 }
-.app.mobile .present {
+.app.mobile .board-present {
   top: 10px;
   right: 10px;
 }

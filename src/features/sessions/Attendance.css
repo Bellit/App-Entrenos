@@ -1,4 +1,7 @@
-/* Pasar lista (editor de sesión y modo entreno) y resumen de asistencia (equipos) */
+/* Pasar lista (editor de sesión y modo entreno) y resumen de asistencia (equipos)
+ * Ojo: las clases llevan prefijo (is-present, mark-present). «present» a secas ya la usa el botón
+ * de pantalla completa de la pista (position: absolute), y como el CSS es global, la heredaban los
+ * jugadores marcados: salían de la lista y se apilaban arriba. */
 
 .attendance {
   display: grid;
@@ -42,14 +45,14 @@
   border-left-width: 4px;
   border-radius: 10px;
 }
-.attendance-row.present,
-.attendance-row.late {
+.attendance-row.is-present,
+.attendance-row.is-late {
   border-left-color: #22c55e;
 }
-.attendance-row.absent {
+.attendance-row.is-absent {
   border-left-color: var(--danger);
 }
-.attendance-row.excused {
+.attendance-row.is-excused {
   border-left-color: #eab308;
 }
 .attendance-name {
@@ -86,18 +89,18 @@
 .mark:hover {
   color: var(--text);
 }
-.mark.present.on,
-.mark.late.on {
+.mark.mark-present.on,
+.mark.mark-late.on {
   border-color: #22c55e;
   background: rgb(34 197 94 / 0.18);
   color: #86efac;
 }
-.mark.absent.on {
+.mark.mark-absent.on {
   border-color: var(--danger);
   background: rgb(239 68 68 / 0.16);
   color: #fca5a5;
 }
-.mark.excused.on {
+.mark.mark-excused.on {
   border-color: #eab308;
   background: rgb(234 179 8 / 0.16);
   color: #fde68a;

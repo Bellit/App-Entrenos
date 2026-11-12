@@ -38,13 +38,13 @@ export function AttendanceCard({ session, squad, update }: { session: S.Session;
           )}
           <ul className="attendance-list">
             {players.map((p) => (
-              <li key={p.id} className={`attendance-row ${att[p.id] ?? 'none'}`}>
+              <li key={p.id} className={`attendance-row is-${att[p.id] ?? 'none'}`}>
                 <span className="attendance-name">
                   {p.number && <b>{p.number}</b>} {p.name}
                 </span>
                 <span className="attendance-marks" role="radiogroup" aria-label={`Asistencia de ${p.name}`}>
                   {S.ATTENDANCE_MARKS.map((m) => (
-                    <button key={m.id} role="radio" aria-checked={att[p.id] === m.id} className={`mark ${m.id}${att[p.id] === m.id ? ' on' : ''}`} onClick={() => update((s) => S.setAttendance(s, p.id, s.attendance[p.id] === m.id ? null : m.id))}>
+                    <button key={m.id} role="radio" aria-checked={att[p.id] === m.id} className={`mark mark-${m.id}${att[p.id] === m.id ? ' on' : ''}`} onClick={() => update((s) => S.setAttendance(s, p.id, s.attendance[p.id] === m.id ? null : m.id))}>
                       {m.label}
                     </button>
                   ))}

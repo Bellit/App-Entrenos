@@ -29,7 +29,7 @@
   cursor: pointer;
 }
 /* botón de pantalla completa, en la esquina de la pista */
-.present {
+.board-present {
   position: absolute;
   top: 16px;
   right: 18px;
