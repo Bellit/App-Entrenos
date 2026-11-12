@@ -194,6 +194,18 @@
   }
   .page-head .head-actions {
     order: 1;
+    position: relative;
+  }
+  /*
+   * El menú ⋯ está a mitad de la cabecera (a su derecha va «Nueva sesión»). Alineado con su propio botón,
+   * los 260 px del menú se salían por la izquierda de la pantalla: se alinea con el borde derecho del
+   * grupo de botones, que es el de la pantalla.
+   */
+  .page-head .head-actions .menu {
+    position: static;
+  }
+  .page-head .head-actions .menu-list {
+    max-width: calc(100vw - 24px);
   }
   /* corte de línea: lo que va después (pestañas y sincronizar) empieza en una fila nueva */
   .page-head::after {
