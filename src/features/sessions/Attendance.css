@@ -7,6 +7,12 @@
   display: grid;
   gap: 12px;
 }
+/* sin esto, un nombre largo (que no se parte) ensancha la tarjeta y la página se mueve de lado */
+.attendance,
+.attendance > *,
+.attendance-row {
+  min-width: 0;
+}
 .attendance-head {
   display: flex;
   flex-wrap: wrap;
@@ -111,12 +117,49 @@
     min-height: 44px;
   }
 }
+/* símbolos y leyenda: solo en el móvil */
+.mark-short,
+.attendance-legend {
+  display: none;
+}
+
 @media (max-width: 767px) {
+  /* una sola línea por jugador: nombre a la izquierda, cuatro botones-símbolo a la derecha */
+  .attendance-row {
+    flex-wrap: nowrap;
+    padding: 4px 4px 4px 10px;
+  }
+  .attendance-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .attendance-marks {
-    width: 100%;
+    flex: none;
+    gap: 3px;
   }
   .mark {
-    flex: 1;
-    padding: 0 4px;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+    font-size: 18px;
+  }
+  .mark-full {
+    display: none;
+  }
+  .mark-short {
+    display: inline;
+  }
+  .attendance-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .attendance-legend b {
+    color: var(--text);
   }
 }

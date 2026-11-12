@@ -75,11 +75,12 @@ export const EMPTY_REVIEW: SessionReview = { done: false, rating: 0, notes: '' }
 
 /** Cómo ha venido cada jugador. «Tarde» cuenta como asistencia; «Justificada» es una falta avisada. */
 export type AttendanceMark = 'present' | 'late' | 'absent' | 'excused';
-export const ATTENDANCE_MARKS: { id: AttendanceMark; label: string }[] = [
-  { id: 'present', label: 'Viene' },
-  { id: 'late', label: 'Tarde' },
-  { id: 'absent', label: 'Falta' },
-  { id: 'excused', label: 'Justificada' },
+/** `short`: símbolo para el móvil, donde los cuatro botones caben en la misma línea que el nombre. */
+export const ATTENDANCE_MARKS: { id: AttendanceMark; label: string; short: string }[] = [
+  { id: 'present', label: 'Viene', short: '✓' },
+  { id: 'late', label: 'Tarde', short: 'T' },
+  { id: 'absent', label: 'Falta', short: '✗' },
+  { id: 'excused', label: 'Justificada', short: 'J' },
 ];
 const isMark = (v: unknown): v is AttendanceMark => ATTENDANCE_MARKS.some((m) => m.id === v);
 

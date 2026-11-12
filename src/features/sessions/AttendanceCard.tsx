@@ -36,6 +36,13 @@ export function AttendanceCard({ session, squad, update }: { session: S.Session;
               ✓ Todos vienen
             </button>
           )}
+          <p className="attendance-legend" aria-hidden="true">
+            {S.ATTENDANCE_MARKS.map((m) => (
+              <span key={m.id}>
+                <b>{m.short}</b> {m.label.toLowerCase()}
+              </span>
+            ))}
+          </p>
           <ul className="attendance-list">
             {players.map((p) => (
               <li key={p.id} className={`attendance-row is-${att[p.id] ?? 'none'}`}>
@@ -44,8 +51,11 @@ export function AttendanceCard({ session, squad, update }: { session: S.Session;
                 </span>
                 <span className="attendance-marks" role="radiogroup" aria-label={`Asistencia de ${p.name}`}>
                   {S.ATTENDANCE_MARKS.map((m) => (
-                    <button key={m.id} role="radio" aria-checked={att[p.id] === m.id} className={`mark mark-${m.id}${att[p.id] === m.id ? ' on' : ''}`} onClick={() => update((s) => S.setAttendance(s, p.id, s.attendance[p.id] === m.id ? null : m.id))}>
-                      {m.label}
+                    <button key={m.id} role="radio" aria-checked={att[p.id] === m.id} aria-label={m.label} title={m.label} className={`mark mark-${m.id}${att[p.id] === m.id ? ' on' : ''}`} onClick={() => update((s) => S.setAttendance(s, p.id, s.attendance[p.id] === m.id ? null : m.id))}>
+                      <span className="mark-full">{m.label}</span>
+                      <span className="mark-short" aria-hidden="true">
+                        {m.short}
+                      </span>
                     </button>
                   ))}
                 </span>

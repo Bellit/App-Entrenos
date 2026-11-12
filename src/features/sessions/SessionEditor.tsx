@@ -6,7 +6,7 @@ import { SaveIndicator } from '../../ui/SaveState';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionBlocks } from './SessionBlocks';
 import { useSessionDoc } from './useSessionDoc';
-import { SessionReviewCard } from './SessionReviewCard';
+import { REVIEW_FOCUS_KEY, SessionReviewCard } from './SessionReviewCard';
 import { AttendanceCard } from './AttendanceCard';
 import { useSquads } from '../teams/useSquads';
 import { squadLabel } from '../../model/squad';
@@ -32,10 +32,29 @@ function TimeBar({ session }: { session: S.Session }) {
  * en orden con su horario; a la derecha, el selector para añadir bloques. En móvil el selector se
  * abre a pantalla completa con el botón «Añadir». Todo se guarda solo.
  */
+type SessionTab = 'plan' | 'asistencia' | 'notas';
+/** Clave para abrir la sesión directamente en una pestaña (la usa «Pasar lista» de la portada). */
+export const TAB_KEY = 'entrenos.pestana';
+function initialTab(id: string): SessionTab {
+  try {
+    if (sessionStorage.getItem(REVIEW_FOCUS_KEY) === id) return 'notas';
+    const t = sessionStorage.getItem(TAB_KEY);
+    if (t === `${id}:asistencia`) {
+      sessionStorage.removeItem(TAB_KEY);
+      return 'asistencia';
+    }
+  } catch {
+    /* sin almacenamiento: se abre el plan */
+  }
+  return 'plan';
+}
+
 export function SessionEditor({ id }: { id: string }) {
   const { status, session: s, update, library, saveState, retry } = useSessionDoc(id);
   const { squads } = useSquads();
   const [picking, setPicking] = useState(false);
+  // pestaña abierta en el móvil; se abre en «Notas» al venir de «Terminar» y en «Asistencia» desde «Pasar lista»
+  const [tab, setTab] = useState<SessionTab>(() => initialTab(id));
   /** Aviso corto abajo («Añadido…», «Bloque quitado» con «Deshacer»). */
   const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null);
 
@@ -113,6 +132,14 @@ export function SessionEditor({ id }: { id: string }) {
   // pasar lista: solo si la sesión es de un equipo
   const squad = squads?.find((t) => t.id === s.teamId);
   const attendance = !s.template && squad && <AttendanceCard session={s} squad={squad} update={update} />;
+  // pestañas del móvil: Plan siempre; Asistencia si hay equipo; Notas si no es plantilla
+  const coming = squad ? squad.players.filter((p) => s.attendance[p.id] === 'present' || s.attendance[p.id] === 'late').length : 0;
+  const tabs: { id: SessionTab; label: string }[] = [
+    { id: 'plan', label: 'Plan' },
+    ...(attendance ? [{ id: 'asistencia' as const, label: `Asistencia ${coming}/${squad!.players.length}` }] : []),
+    ...(review ? [{ id: 'notas' as const, label: s.review.done ? `Notas ${s.review.rating ? '★'.repeat(s.review.rating) : '✓'}` : 'Notas' }] : []),
+  ];
+  const current = tabs.some((t) => t.id === tab) ? tab : 'plan';
   /** Crea una sesión para hoy a partir de esta plantilla y la abre. */
   const startFromTemplate = async () => {
     const n = S.fromTemplate(s, S.todayISO());
@@ -121,7 +148,7 @@ export function SessionEditor({ id }: { id: string }) {
   };
 
   return (
-    <div className={`page session-editor${picking ? ' picking' : ''}`}>
+    <div className={`page session-editor${picking ? ' picking' : ''} on-${current}`}>
       <header className="page-head sess-head">
         <a className="btn ghost back" href={routeHref.sessions} aria-label="Volver a las sesiones" title="Volver a las sesiones">
           <IconPrev /> <span className="back-text">Sesiones</span>
@@ -141,12 +168,22 @@ export function SessionEditor({ id }: { id: string }) {
             </a>
           )}
         </div>
+        {tabs.length > 1 && (
+          <nav className="sess-tabs" role="tablist" aria-label="Partes de la sesión">
+            {tabs.map((t) => (
+              <button key={t.id} role="tab" aria-selected={current === t.id} className={current === t.id ? 'on' : undefined} onClick={() => setTab(t.id)}>
+                {t.label}
+              </button>
+            ))}
+          </nav>
+        )}
       </header>
 
       <div className="sess-layout">
         <main className="sess-main">
-          {reviewFirst && review}
-          {reviewFirst && attendance}
+          <div className="part part-notas">{reviewFirst && review}</div>
+          <div className="part part-asistencia">{reviewFirst && attendance}</div>
+          <div className="part part-plan">
           {/* 2.4 · Cabecera de la sesión */}
           <section className="sess-card sess-fields" aria-label="Datos de la sesión">
             {!s.template && (
@@ -217,9 +254,10 @@ export function SessionEditor({ id }: { id: string }) {
           ) : (
             <SessionBlocks session={s} library={library} update={update} onRemove={remove} />
           )}
-          {!reviewFirst && attendance}
-          {!reviewFirst && review}
           {d && <p className="sess-date-long muted">{d.long}</p>}
+          </div>
+          <div className="part part-asistencia">{!reviewFirst && attendance}</div>
+          <div className="part part-notas">{!reviewFirst && review}</div>
         </main>
 
         <aside className="sess-picker" aria-label="Añadir bloques">
@@ -228,7 +266,7 @@ export function SessionEditor({ id }: { id: string }) {
       </div>
 
       {/* en móvil: botón fijo abajo para abrir el selector */}
-      {!picking && s.blocks.length > 0 && (
+      {!picking && s.blocks.length > 0 && current === 'plan' && (
         <button className="btn primary big fab only-mobile" onClick={() => setPicking(true)}>
           <IconPlus /> Añadir
         </button>

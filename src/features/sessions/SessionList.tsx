@@ -16,10 +16,11 @@ import { Menu } from '../../ui/Menu';
 import { PageHeader } from '../../ui/PageHeader';
 import { PageFooter } from '../../ui/PageFooter';
 import { useDataTools } from '../data/useDataTools';
+import { TAB_KEY } from './SessionEditor';
 import './SessionList.css';
 
 /** Una sesión en la lista: la fecha bien visible a la izquierda, y título, horario y bloques. */
-function SessionCard({ s, today, squad, onDuplicate, onDelete, onShare, onTemplate, onUse }: { s: S.Session; today: string; squad?: Squad; onDuplicate: () => void; onDelete: () => void; onShare: () => void; onTemplate: () => void; onUse: () => void }) {
+function SessionCard({ s, today, squad, hero = false, onDuplicate, onDelete, onShare, onTemplate, onUse }: { s: S.Session; today: string; squad?: Squad; hero?: boolean; onDuplicate: () => void; onDelete: () => void; onShare: () => void; onTemplate: () => void; onUse: () => void }) {
   const d = S.dateParts(s.date);
   const total = S.totalMinutes(s);
   const end = S.endTime(s);
@@ -73,6 +74,32 @@ function SessionCard({ s, today, squad, onDuplicate, onDelete, onShare, onTempla
           )}
         </div>
       </a>
+      {hero && (s.blocks.length > 0 || (squad?.players.length ?? 0) > 0) && (
+        // la sesión de hoy: lo que se hace en la pista, a un toque y sin abrir menús
+        <div className="today-actions">
+          {s.blocks.length > 0 && (
+            <a className="btn primary big" href={routeHref.training(s.id)}>
+              <IconPlay /> Entrenar
+            </a>
+          )}
+          {squad && squad.players.length > 0 && (
+            <a
+              className="btn big"
+              href={routeHref.session(s.id)}
+              onClick={() => {
+                try {
+                  sessionStorage.setItem(TAB_KEY, `${s.id}:asistencia`);
+                } catch {
+                  /* sin almacenamiento: se abre en el plan */
+                }
+              }}
+            >
+              Pasar lista
+              {Object.keys(s.attendance).length > 0 && <span className="filter-chip-count">{squad.players.filter((p) => s.attendance[p.id] === 'present' || s.attendance[p.id] === 'late').length}/{squad.players.length}</span>}
+            </a>
+          )}
+        </div>
+      )}
       <div className="session-menu">
         <Menu
           iconOnly
@@ -163,15 +190,19 @@ export function SessionList() {
       refresh();
     })();
 
-  const section = (title: string, items: S.Session[]) =>
+  // las de hoy van arriba, destacadas y con sus acciones; «Próximas» empieza en mañana
+  const todays = groups.upcoming.filter((s) => s.date === today);
+  const upcoming = groups.upcoming.filter((s) => s.date !== today);
+
+  const section = (title: string, items: S.Session[], hero = false) =>
     items.length > 0 && (
-      <section className="session-group" aria-label={title}>
+      <section className={`session-group${hero ? ' today-group' : ''}`} aria-label={title}>
         <h2>
           {title} <span className="count">{items.length}</span>
         </h2>
         <ul className="session-cards">
           {items.map((s) => (
-            <SessionCard key={s.id} s={s} today={today} squad={squadById.get(s.teamId)} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} onTemplate={() => saveTemplate(s)} onUse={() => createFrom(s)} />
+            <SessionCard key={s.id} s={s} today={today} hero={hero} squad={squadById.get(s.teamId)} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} onTemplate={() => saveTemplate(s)} onUse={() => createFrom(s)} />
           ))}
         </ul>
       </section>
@@ -265,7 +296,8 @@ export function SessionList() {
           </section>
         )}
 
-        {section('Próximas', groups.upcoming)}
+        {section('Hoy', todays, true)}
+        {section('Próximas', upcoming)}
         {section('Sin fecha', groups.undated)}
         {section('Pasadas', groups.past)}
         {section('Plantillas', groups.templates)}

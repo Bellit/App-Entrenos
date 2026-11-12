@@ -293,3 +293,16 @@
 .page-foot a:hover {
   color: var(--text);
 }
+
+/* ---------- Zonas táctiles: en el móvil, nada pequeño de menos de 44 px de alto para el dedo ---------- */
+@media (max-width: 767px) {
+  .field-link,
+  .notice .link,
+  .page-foot a,
+  .sess-notes summary,
+  .team-players summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

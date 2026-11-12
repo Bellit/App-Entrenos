@@ -8,6 +8,7 @@ import { IconDownload, IconMore, IconPlus, IconShare, IconUpload } from '../../u
 import { navigate, routeHref } from '../../app/useRoute';
 import { installApp, usePwa } from '../../pwa/pwa';
 import { Menu } from '../../ui/Menu';
+import { useSync } from '../../sync/sync';
 
 /** Hasta cuándo no se vuelve a mostrar el aviso de copia de seguridad (preferencia de este navegador). */
 const BACKUP_LATER_KEY = 'entrenos.copia.masTarde';
@@ -29,6 +30,7 @@ export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChang
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [storage, setStorage] = useState<StorageState>('unknown');
   const [backupLater, setBackupLater] = useState(() => Number(getItem(BACKUP_LATER_KEY)) > Date.now());
+  const signedIn = !!useSync().email;
   const fileInput = useRef<HTMLInputElement>(null);
   const pwa = usePwa();
 
@@ -116,7 +118,8 @@ export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChang
           </button>
         </p>
       )}
-      {storage === 'at-risk' && !backupLater && hasData && (
+      {/* con cuenta, todo está ya en la nube: el aviso sobraría */}
+      {storage === 'at-risk' && !backupLater && hasData && !signedIn && (
         <div className="notice backup" role="note">
           <p>
             <strong>Tus ejercicios y sesiones solo están en este navegador.</strong> Si se queda sin espacio, o en iPhone si pasas una semana sin abrir la app, podría borrarlos. Guarda una copia de vez en cuando (o añade la app a la pantalla de inicio).
