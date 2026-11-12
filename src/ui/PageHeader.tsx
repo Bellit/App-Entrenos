@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { routeHref } from '../app/useRoute';
-import { SyncButton } from '../sync/SyncButton';
+import { InboxButton, SyncButton } from '../sync/SyncButton';
 import { Brand } from './Brand';
 import './Page.css';
 
@@ -20,6 +20,7 @@ export function PageHeader({ current, actions }: { current: 'sessions' | 'librar
           Ejercicios
         </a>
       </nav>
+      <InboxButton />
       <SyncButton />
       <div className="head-actions">{actions}</div>
     </header>

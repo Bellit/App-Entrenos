@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { notifyRemoteChange, onLocalChange, syncLocal, type Kind } from '../data/db';
 import { type Remote, type RemoteRow, syncOnce } from './engine';
+import { countInbox } from './shares';
 import { supabase } from './supabase';
 
 /**
@@ -20,9 +21,11 @@ interface State {
   /** Última sincronización completa (ms). */
   lastSync: number | null;
   error: string | null;
+  /** Cosas que me han compartido y aún no he mirado. */
+  inbox: number;
 }
 
-let state: State = { email: null, status: 'off', lastSync: null, error: null };
+let state: State = { email: null, status: 'off', lastSync: null, error: null, inbox: 0 };
 let userId: string | null = null;
 const listeners = new Set<() => void>();
 const set = (patch: Partial<State>) => {
@@ -88,6 +91,7 @@ export function syncNow(): Promise<void> {
         const r = await syncOnce(syncLocal, remote);
         if (r.pulled) notifyRemoteChange();
         set({ status: 'idle', lastSync: Date.now() });
+        void refreshInbox();
       } catch (e) {
         set({ status: navigator.onLine ? 'error' : 'offline', error: e instanceof Error ? e.message : String(e) });
         return;
@@ -130,7 +134,7 @@ export function startSync() {
       if (session?.user) void onSignedIn(session.user.id, session.user.email ?? null);
       else if (event === 'SIGNED_OUT') {
         userId = null;
-        set({ email: null, status: 'off', lastSync: null, error: null });
+        set({ email: null, status: 'off', lastSync: null, error: null, inbox: 0 });
       }
     });
   });
@@ -163,4 +167,17 @@ export async function verifyCode(email: string, code: string) {
 export async function signOut() {
   await syncNow().catch(() => {});
   await supabase.auth.signOut();
+}
+
+/** La cuenta con la que se ha entrado (para «lo que he compartido»). */
+export const currentUserId = () => userId;
+
+/** Vuelve a contar lo que me han compartido (tras sincronizar, o al guardar o descartar algo). */
+export async function refreshInbox() {
+  if (!state.email) return;
+  try {
+    set({ inbox: await countInbox(state.email) });
+  } catch {
+    /* sin la tabla de compartidos, o sin conexión: el aviso simplemente no sale */
+  }
 }

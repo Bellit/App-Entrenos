@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ExerciseThumb } from './ExerciseThumb';
 import { usePalette } from '../../court/theme';
-import { deleteExercise, listExercises, saveExercise, onRemoteChange } from '../../data/db';
+import { deleteExercise, getExercise, listExercises, saveExercise, onRemoteChange } from '../../data/db';
 import { type Exercise, type ExerciseCategory, categoryName, duplicateExercise, EXERCISE_CATEGORIES, matchesFilters, newExercise } from '../../model/exercise';
 import { navigate, routeHref } from '../../app/useRoute';
 import { PageHeader } from '../../ui/PageHeader';
 import { useDataTools } from '../data/useDataTools';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDuplicate, IconMore, IconPlus, IconSearch, IconTrash } from '../../ui/Icons';
+import { IconDuplicate, IconMore, IconPlus, IconSearch, IconShare, IconTrash } from '../../ui/Icons';
+import { exercisePayload } from '../../model/share';
+import { ShareDialog } from '../../sync/ShareDialog';
 import { Menu } from '../../ui/Menu';
 import './Library.css';
 
@@ -19,6 +21,7 @@ export function Library() {
   const [category, setCategory] = useState<ExerciseCategory | ''>('');
   const [tag, setTag] = useState('');
   const [toDelete, setToDelete] = useState<Exercise | null>(null);
+  const [toShare, setToShare] = useState<Exercise | null>(null);
   const palette = usePalette();
 
   const refresh = () =>
@@ -174,6 +177,7 @@ export function Library() {
                   label={`Más acciones de ${e.title}`}
                   icon={<IconMore />}
                   items={[
+                    { label: 'Compartir', hint: 'Por WhatsApp o con otro entrenador', icon: <IconShare />, onSelect: () => setToShare(e) },
                     { label: 'Duplicar', hint: 'Crear una variante', icon: <IconDuplicate />, onSelect: () => duplicate(e) },
                     { label: 'Eliminar', icon: <IconTrash />, onSelect: () => setToDelete(e) },
                   ]}
@@ -183,6 +187,13 @@ export function Library() {
           ))}
         </ul>
       </main>
+
+      <ShareDialog
+        open={!!toShare}
+        onClose={() => setToShare(null)}
+        what="Ejercicio"
+        build={async () => exercisePayload((toShare && (await getExercise(toShare.id))) || toShare!)}
+      />
 
       {toDelete && (
         <ConfirmDialog

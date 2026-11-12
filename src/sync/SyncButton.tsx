@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { routeHref } from '../app/useRoute';
 import { IconCloud } from '../ui/Icons';
 import { AccountDialog } from './AccountDialog';
 import { useSync } from './sync';
@@ -19,5 +20,16 @@ export function SyncButton() {
       </button>
       <AccountDialog open={open} onClose={() => setOpen(false)} />
     </>
+  );
+}
+
+/** Aviso «N compartidos conmigo» en la cabecera; solo aparece si hay algo nuevo. */
+export function InboxButton() {
+  const { inbox } = useSync();
+  if (!inbox) return null;
+  return (
+    <a className="btn inbox-btn" href={routeHref.inbox} aria-label={inbox === 1 ? '1 cosa compartida contigo' : `${inbox} cosas compartidas contigo`}>
+      <b>{inbox}</b> <span className="inbox-label">{inbox === 1 ? 'compartido contigo' : 'compartidos contigo'}</span>
+    </a>
   );
 }

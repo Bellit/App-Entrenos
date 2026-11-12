@@ -14,6 +14,11 @@ describe('parseRoute', () => {
     expect(parseRoute('#/sesion/xy_9')).toEqual({ name: 'session', id: 'xy_9' });
     expect(parseRoute('#/entreno/xy_9')).toEqual({ name: 'training', id: 'xy_9' });
   });
+  it('compartidos', () => {
+    expect(parseRoute('#/c/k7Qx2mPaAbCd')).toEqual({ name: 'shared', id: 'k7Qx2mPaAbCd' });
+    expect(parseRoute('#/compartido')).toEqual({ name: 'inbox' });
+    expect(parseRoute('#/c/a.b')).toEqual({ name: 'sessions' });
+  });
   it('un id raro vuelve a la portada', () => {
     expect(parseRoute('#/ejercicio/../../x')).toEqual({ name: 'sessions' });
     expect(parseRoute('#/sesion/')).toEqual({ name: 'sessions' });

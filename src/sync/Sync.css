@@ -141,3 +141,61 @@
   border: 1px solid var(--border);
   border-radius: 10px;
 }
+
+/* ---------- Compartir ---------- */
+.share-part {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.share-part h3 {
+  font-size: 18px;
+}
+.share-part .btn {
+  justify-self: start;
+  text-decoration: none;
+}
+.share-link {
+  min-height: 44px;
+  font-size: 14px !important;
+}
+.share-send {
+  display: flex;
+  gap: 8px;
+}
+.share-send input {
+  flex: 1;
+  min-width: 0;
+}
+.share-ok {
+  color: #86efac;
+}
+
+/* aviso de cosas compartidas conmigo, en la cabecera */
+.inbox-btn {
+  min-height: 44px;
+  border-color: var(--accent);
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 10px;
+}
+.inbox-btn b {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+}
+@media (max-width: 767px) {
+  .inbox-btn .inbox-label {
+    display: none;
+  }
+  .page-head .inbox-btn {
+    order: 4;
+  }
+}

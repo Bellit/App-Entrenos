@@ -4,14 +4,16 @@ import { deleteSession, listExercises, listSessions, saveSession, onRemoteChange
 import { categoryName } from '../../model/exercise';
 import * as S from '../../model/session';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDuplicate, IconMore, IconPlay, IconPlus, IconTrash } from '../../ui/Icons';
+import { IconDuplicate, IconMore, IconPlay, IconPlus, IconShare, IconTrash } from '../../ui/Icons';
+import { sessionPayload } from '../../model/share';
+import { ShareDialog } from '../../sync/ShareDialog';
 import { Menu } from '../../ui/Menu';
 import { PageHeader } from '../../ui/PageHeader';
 import { useDataTools } from '../data/useDataTools';
 import './SessionList.css';
 
 /** Una sesión en la lista: la fecha bien visible a la izquierda, y título, horario y bloques. */
-function SessionCard({ s, today, onDuplicate, onDelete }: { s: S.Session; today: string; onDuplicate: () => void; onDelete: () => void }) {
+function SessionCard({ s, today, onDuplicate, onDelete, onShare }: { s: S.Session; today: string; onDuplicate: () => void; onDelete: () => void; onShare: () => void }) {
   const d = S.dateParts(s.date);
   const total = S.totalMinutes(s);
   const end = S.endTime(s);
@@ -59,6 +61,7 @@ function SessionCard({ s, today, onDuplicate, onDelete }: { s: S.Session; today:
           icon={<IconMore />}
           items={[
             ...(s.blocks.length ? [{ label: 'Entrenar', hint: 'Seguirla pantalla a pantalla', icon: <IconPlay />, onSelect: () => navigate(routeHref.training(s.id)) }] : []),
+            { label: 'Compartir', hint: 'Por WhatsApp o con otro entrenador', icon: <IconShare />, onSelect: onShare },
             { label: 'Duplicar', hint: 'Misma estructura, sin fecha', icon: <IconDuplicate />, onSelect: onDuplicate },
             { label: 'Eliminar', icon: <IconTrash />, onSelect: onDelete },
           ]}
@@ -74,6 +77,7 @@ export function SessionList() {
   const [exerciseCount, setExerciseCount] = useState(0);
   const [error, setError] = useState(false);
   const [toDelete, setToDelete] = useState<S.Session | null>(null);
+  const [toShare, setToShare] = useState<S.Session | null>(null);
   const today = S.todayISO();
 
   const refresh = () => {
@@ -120,7 +124,7 @@ export function SessionList() {
         </h2>
         <ul className="session-cards">
           {items.map((s) => (
-            <SessionCard key={s.id} s={s} today={today} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} />
+            <SessionCard key={s.id} s={s} today={today} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} />
           ))}
         </ul>
       </section>
@@ -184,6 +188,13 @@ export function SessionList() {
         {section('Sin fecha', groups.undated)}
         {section('Pasadas', groups.past)}
       </main>
+
+      <ShareDialog
+        open={!!toShare}
+        onClose={() => setToShare(null)}
+        what="Sesión"
+        build={async () => sessionPayload(toShare!, new Map((await listExercises()).map((e) => [e.id, e])))}
+      />
 
       {toDelete && (
         <ConfirmDialog

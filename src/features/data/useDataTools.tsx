@@ -4,7 +4,8 @@ import { requestPersistence, type StorageState, storageState } from '../../data/
 import { download } from '../../files';
 import { backupData, backupFileName, readImportFile } from '../../model/importFile';
 import { getItem, setItem } from '../../prefs';
-import { IconDownload, IconMore, IconPlus, IconUpload } from '../../ui/Icons';
+import { IconDownload, IconMore, IconPlus, IconShare, IconUpload } from '../../ui/Icons';
+import { navigate, routeHref } from '../../app/useRoute';
 import { installApp, usePwa } from '../../pwa/pwa';
 import { Menu } from '../../ui/Menu';
 
@@ -97,6 +98,7 @@ export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChang
       items={[
         { label: 'Importar archivos…', hint: 'Jugadas de ATO, ejercicios o una copia', icon: <IconUpload />, onSelect: () => fileInput.current?.click() },
         { label: 'Descargar copia de seguridad', hint: 'Ejercicios y sesiones en un archivo', icon: <IconDownload />, onSelect: downloadBackup, disabled: !hasData },
+        { label: 'Compartidos', hint: 'Conmigo y lo que he compartido', icon: <IconShare />, onSelect: () => navigate(routeHref.inbox) },
         ...(pwa.canInstall ? [{ label: 'Instalar la app', hint: 'En la pantalla de inicio, y funciona sin conexión', icon: <IconPlus />, onSelect: () => void installApp() }] : []),
       ]}
     />

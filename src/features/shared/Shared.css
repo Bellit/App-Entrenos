@@ -1,0 +1,141 @@
+/* Vista previa de lo compartido, la pantalla del enlace y «Compartido conmigo» */
+
+.shared-exercise {
+  display: grid;
+  gap: 16px;
+}
+.shared-court .player-court svg {
+  max-height: 46dvh;
+}
+.shared-info {
+  display: grid;
+  gap: 10px;
+}
+.shared-info h2,
+.shared-session h2 {
+  font-size: clamp(26px, 5vw, 38px);
+  line-height: 1.05;
+}
+.shared-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.shared-session {
+  display: grid;
+  gap: 8px;
+}
+.shared-session p {
+  margin: 0;
+}
+.shared-goal {
+  font-size: 17px;
+}
+.shared-blocks {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0;
+  padding-left: 24px;
+}
+.shared-blocks li {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.shared-blocks li.text {
+  border-style: dashed;
+  background: transparent;
+}
+.shared-blocks li span {
+  font-weight: 600;
+}
+.shared-blocks li small {
+  float: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* pantalla del enlace */
+.shared-page {
+  display: grid;
+  gap: 18px;
+  max-width: 980px;
+}
+.shared-from {
+  margin: 0;
+  color: var(--muted);
+}
+.shared-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* «Compartido conmigo» y «Lo que he compartido» */
+.inbox-section {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.inbox-section > h2 {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.inbox-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inbox-item {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+}
+.inbox-item header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+.inbox-item h3 {
+  font-size: 21px;
+}
+.inbox-kind {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(249 115 22 / 0.16);
+  color: #fdba74;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.inbox-meta {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.inbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.inbox-preview {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+  .shared-exercise {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+}
