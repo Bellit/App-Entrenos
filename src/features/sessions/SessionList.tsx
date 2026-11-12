@@ -14,6 +14,7 @@ import { sessionPayload } from '../../model/share';
 import { ShareDialog } from '../../sync/ShareDialog';
 import { Menu } from '../../ui/Menu';
 import { PageHeader } from '../../ui/PageHeader';
+import { PageFooter } from '../../ui/PageFooter';
 import { useDataTools } from '../data/useDataTools';
 import './SessionList.css';
 
@@ -279,6 +280,7 @@ export function SessionList() {
           </p>
         )}
       </main>
+      <PageFooter />
 
       <ShareDialog
         open={!!toShare}

@@ -273,3 +273,23 @@
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Pie: firma y privacidad ---------- */
+.page-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  padding: 18px 16px calc(22px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+.page-foot a {
+  font-size: 13px;
+  color: var(--muted);
+}
+.page-foot a:hover {
+  color: var(--text);
+}

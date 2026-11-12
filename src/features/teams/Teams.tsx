@@ -6,6 +6,7 @@ import type { Session } from '../../model/session';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { IconPlus, IconTrash } from '../../ui/Icons';
 import { PageHeader } from '../../ui/PageHeader';
+import { PageFooter } from '../../ui/PageFooter';
 import { useDataTools } from '../data/useDataTools';
 import { useSquads } from './useSquads';
 import './Teams.css';
@@ -151,6 +152,7 @@ export function Teams() {
         </ul>
         {squads && squads.length > 0 && <p className="muted small">Los cambios se guardan solos. La asistencia se pasa en cada sesión del equipo (o desde el modo entreno); aquí ves el porcentaje de cada jugador.</p>}
       </main>
+      <PageFooter />
 
       {toDelete && (
         <ConfirmDialog

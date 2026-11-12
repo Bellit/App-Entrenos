@@ -5,6 +5,7 @@ import { deleteExercise, getExercise, listExercises, saveExercise, onRemoteChang
 import { type Exercise, type ExerciseCategory, categoryName, duplicateExercise, EXERCISE_CATEGORIES, matchesFilters, newExercise } from '../../model/exercise';
 import { navigate, routeHref } from '../../app/useRoute';
 import { PageHeader } from '../../ui/PageHeader';
+import { PageFooter } from '../../ui/PageFooter';
 import { useDataTools } from '../data/useDataTools';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { IconDuplicate, IconMore, IconPlus, IconSearch, IconShare, IconTrash } from '../../ui/Icons';
@@ -187,6 +188,7 @@ export function Library() {
           ))}
         </ul>
       </main>
+      <PageFooter />
 
       <ShareDialog
         open={!!toShare}

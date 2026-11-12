@@ -1,0 +1,36 @@
+/* ---------- Firma del autor ---------- */
+
+.signature {
+  /* colores de la marca DBellido (su web), no de la app */
+  --dbellido-b: #b4a5ff;
+  --dbellido-name: #f5b544;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.signature svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.signature .px-d {
+  fill: var(--text);
+}
+.signature .px-b {
+  fill: var(--dbellido-b);
+}
+.signature b {
+  font-weight: 700;
+  color: var(--dbellido-name);
+}
+.signature.small {
+  gap: 6px;
+  font-size: 12px;
+}
+.signature.small svg {
+  width: 18px;
+  height: 18px;
+}
