@@ -40,6 +40,7 @@ export function startPwa() {
   });
 
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  const hadController = !!navigator.serviceWorker.controller;
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('./sw.js')
@@ -56,8 +57,9 @@ export function startPwa() {
       .catch(() => {
         /* sin service worker la app sigue funcionando, solo que no sin conexión */
       });
-    // cuando la versión nueva toma el relevo, se recarga una sola vez
-    let reloaded = false;
+    // cuando la versión nueva toma el relevo, se recarga una sola vez. En la primera visita no:
+    // ahí el service worker solo empieza a atender la página (no había otro antes) y no cambia nada.
+    let reloaded = !hadController;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (reloaded) return;
       reloaded = true;

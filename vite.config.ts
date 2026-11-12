@@ -74,16 +74,38 @@ function serviceWorker(): Plugin {
         if (item?.type === 'chunk') hash.update(item.code);
         else if (item?.type === 'asset') hash.update(typeof item.source === 'string' ? item.source : Buffer.from(item.source));
       }
+      // la portada se guarda como './': Cloudflare Pages redirige 'index.html' a '/'
+      const precache = unique.map((f) => (f === 'index.html' ? './' : f));
       const source = template
         .replace('__VERSION__', hash.digest('hex').slice(0, 12))
-        .replace('__PRECACHE__', JSON.stringify(unique, null, 2));
+        .replace('__PRECACHE__', JSON.stringify(precache, null, 2));
       this.emitFile({ type: 'asset', fileName: 'sw.js', source });
     },
   };
 }
 
+/**
+ * La vista previa (`npm run preview`) se comporta como Cloudflare Pages: `/index.html` redirige a `/`
+ * con un 308. Sin esto, la prueba local no habría detectado que el service worker guardaba una
+ * respuesta redirigida y que la app publicada dejaba de abrir a la segunda visita.
+ */
+function pagesLikePreview(): Plugin {
+  return {
+    name: 'pages-like-preview',
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const [path, query] = (req.url ?? '').split('?');
+        if (!path.endsWith('/index.html')) return next();
+        res.statusCode = 308;
+        res.setHeader('Location', path.slice(0, -'index.html'.length) + (query ? `?${query}` : ''));
+        res.end();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), securityHeaders(), serviceWorker()],
+  plugins: [react(), securityHeaders(), serviceWorker(), pagesLikePreview()],
   base: './',
   preview: { headers: SECURITY_HEADERS },
   // los tests leen las hojas de estilo (p. ej. para comprobar los puntos de corte)

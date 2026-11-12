@@ -23,8 +23,30 @@ const PRECACHE = __PRECACHE__;
  */
 const MATCH = { cacheName: CACHE, ignoreVary: true };
 
+/**
+ * Copia «limpia» de una respuesta redirigida. Cloudflare Pages redirige `/index.html` a `/`, y una
+ * respuesta marcada como redirigida no se puede usar para abrir una página: Chrome la rechaza y
+ * sale «No se puede acceder a este sitio web». Con una copia nueva (mismo contenido y cabeceras,
+ * sin la marca) no pasa.
+ */
+async function clean(res) {
+  if (!res.redirected) return res;
+  return new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: res.headers });
+}
+
+// al instalarse, descarga cada archivo (sin usar la caché del navegador) y guarda una copia limpia
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
+  event.waitUntil(
+    caches.open(CACHE).then((cache) =>
+      Promise.all(
+        PRECACHE.map(async (url) => {
+          const res = await fetch(url, { cache: 'reload' });
+          if (!res.ok) throw new Error(`No se pudo guardar ${url} (${res.status})`);
+          await cache.put(url, await clean(res));
+        }),
+      ),
+    ),
+  );
 });
 
 self.addEventListener('message', (event) => {
@@ -47,11 +69,12 @@ self.addEventListener('fetch', (event) => {
 
   // abrir la app (cualquier dirección: las pantallas van en el #) → la página guardada.
   // Primero la caché: en un pabellón con mala cobertura la app abre al instante.
+  // (la portada se guarda como './', no como 'index.html', que Cloudflare redirige)
   if (req.mode === 'navigate') {
-    event.respondWith(caches.match('index.html', MATCH).then((hit) => hit || fetch(req)));
+    event.respondWith(caches.match('./', MATCH).then((hit) => (hit ? clean(hit) : fetch(req))));
     return;
   }
 
   // el resto (código, estilos, letras, iconos): de la caché y, si no está, de la red
-  event.respondWith(caches.match(req, MATCH).then((hit) => hit || fetch(req)));
+  event.respondWith(caches.match(req, MATCH).then((hit) => (hit ? clean(hit) : fetch(req))));
 });
