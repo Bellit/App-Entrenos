@@ -11,6 +11,22 @@
   font-size: 13px;
   color: var(--muted);
 }
+/* toda la firma es el enlace a la web del autor */
+.signature a {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  min-height: 44px;
+  font-size: inherit;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+}
+.signature a:hover span,
+.signature a:focus-visible span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .signature svg {
   width: 22px;
   height: 22px;
