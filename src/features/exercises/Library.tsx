@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ExerciseThumb } from './ExerciseThumb';
 import { usePalette } from '../../court/theme';
-import { deleteExercise, listExercises, saveExercise } from '../../data/db';
+import { deleteExercise, listExercises, saveExercise, onRemoteChange } from '../../data/db';
 import { type Exercise, type ExerciseCategory, categoryName, duplicateExercise, EXERCISE_CATEGORIES, matchesFilters, newExercise } from '../../model/exercise';
 import { navigate, routeHref } from '../../app/useRoute';
 import { PageHeader } from '../../ui/PageHeader';
@@ -27,6 +27,8 @@ export function Library() {
       .catch(() => setError(true));
   useEffect(() => {
     refresh();
+    // cuando llegan cambios de la nube (otro dispositivo), se vuelve a leer la lista
+    return onRemoteChange(refresh);
   }, []);
   const data = useDataTools({ hasData: !!list?.length, onChanged: refresh });
   const { guarded, protect } = data;

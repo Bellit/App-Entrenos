@@ -1,0 +1,127 @@
+/* Botón de sincronización (cabecera) y ventana de la cuenta */
+
+.sync-btn {
+  position: relative;
+  min-height: 44px;
+  gap: 8px;
+  border-radius: 10px;
+  color: var(--muted);
+}
+.sync-btn svg {
+  width: 20px;
+  height: 20px;
+}
+/* punto de estado sobre la nube */
+.sync-dot {
+  position: absolute;
+  top: 9px;
+  left: 26px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--panel);
+  border-radius: 50%;
+  background: var(--muted);
+}
+.sync-btn.idle .sync-dot {
+  background: #4ade80;
+}
+.sync-btn.syncing .sync-dot {
+  background: var(--accent);
+  animation: sync-blink 1s ease-in-out infinite;
+}
+.sync-btn.offline .sync-dot {
+  background: #fcd34d;
+}
+.sync-btn.error .sync-dot {
+  background: var(--danger);
+}
+.sync-btn.off .sync-dot {
+  display: none;
+}
+@keyframes sync-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.account {
+  display: grid;
+  gap: 12px;
+  max-width: 440px;
+}
+.account form {
+  display: grid;
+  gap: 12px;
+}
+.account p {
+  margin: 0;
+  line-height: 1.5;
+}
+.account input {
+  min-height: 44px;
+  font-size: 16px; /* 16 px o más: así el iPhone no amplía la página al escribir */
+}
+.code-input {
+  font-family: var(--font-title);
+  font-size: 26px !important;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.account-error {
+  color: var(--danger);
+}
+.account .small {
+  font-size: 13px;
+}
+.account a {
+  color: var(--accent);
+}
+.sync-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.sync-state i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.sync-state.idle i {
+  background: #4ade80;
+}
+.sync-state.syncing i {
+  background: var(--accent);
+}
+.sync-state.offline i {
+  background: #fcd34d;
+}
+.sync-state.error i {
+  background: var(--danger);
+}
+
+@media (max-width: 767px) {
+  .sync-label {
+    display: none;
+  }
+  .sync-btn {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .sync-dot {
+    left: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-btn.syncing .sync-dot {
+    animation: none;
+  }
+}

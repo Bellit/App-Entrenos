@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { navigate, routeHref } from '../../app/useRoute';
-import { deleteSession, listExercises, listSessions, saveSession } from '../../data/db';
+import { deleteSession, listExercises, listSessions, saveSession, onRemoteChange } from '../../data/db';
 import { categoryName } from '../../model/exercise';
 import * as S from '../../model/session';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
@@ -86,6 +86,8 @@ export function SessionList() {
   };
   useEffect(() => {
     refresh();
+    // cuando llegan cambios de la nube (otro dispositivo), se vuelve a leer la lista
+    return onRemoteChange(refresh);
   }, []);
   const data = useDataTools({ hasData: !!list?.length || exerciseCount > 0, onChanged: refresh });
   const { guarded, protect } = data;

@@ -151,10 +151,12 @@
 
 /* ---------- Pestañas: Sesiones / Ejercicios ---------- */
 
+.page-head .sync-btn {
+  margin-left: auto;
+}
 .tabs {
   display: flex;
   gap: 4px;
-  margin-right: auto;
   margin-left: 18px;
   padding: 4px;
   border: 1px solid var(--border);
@@ -185,15 +187,28 @@
   .brand-name {
     font-size: 21px;
   }
-  /* en móvil las pestañas bajan a una segunda fila, a todo el ancho */
+  /* en móvil las pestañas bajan a una segunda fila, con el botón de sincronizar a su lado */
   .page-head {
     flex-wrap: wrap;
     row-gap: 10px;
   }
+  .page-head .head-actions {
+    order: 1;
+  }
+  /* corte de línea: lo que va después (pestañas y sincronizar) empieza en una fila nueva */
+  .page-head::after {
+    content: '';
+    order: 2;
+    flex-basis: 100%;
+    margin-top: -10px;
+  }
   .tabs {
     order: 3;
-    flex: 1 0 100%;
+    flex: 1 1 0;
     margin: 0;
+  }
+  .page-head .sync-btn {
+    order: 4;
   }
   .tabs a {
     flex: 1;

@@ -18,7 +18,8 @@ const SECURITY_HEADERS: Record<string, string> = {
     "style-src 'self'",
     "img-src 'self' blob: data:",
     "media-src 'self' blob:",
-    "connect-src 'self'",
+    // Supabase: la nube donde se sincronizan ejercicios y sesiones (ver src/sync/supabase.ts)
+    "connect-src 'self' https://ttvsdivqymgwvptfjjmy.supabase.co",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'none'",

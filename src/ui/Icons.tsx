@@ -119,6 +119,11 @@ export const IconShare = () => (
     <path d="M6 11H5a1 1 0 00-1 1v8a1 1 0 001 1h14a1 1 0 001-1v-8a1 1 0 00-1-1h-1" />
   </svg>
 );
+export const IconCloud = () => (
+  <svg {...base}>
+    <path d="M7 18a4.5 4.5 0 01-.6-8.96A6 6 0 0118 9.5a4 4 0 01-.5 8.5z" />
+  </svg>
+);
 export const IconFile = () => (
   <svg {...base}>
     <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
