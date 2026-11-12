@@ -125,3 +125,19 @@
     animation: none;
   }
 }
+
+.account-code {
+  display: grid;
+  gap: 10px;
+}
+.account-code summary {
+  width: max-content;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.account-code[open] {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
