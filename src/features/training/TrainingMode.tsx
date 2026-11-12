@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { routeHref } from '../../app/useRoute';
-import { getSession, listExercises } from '../../data/db';
+import { getSession, listExercises, saveSession } from '../../data/db';
 import { categoryName } from '../../model/exercise';
 import * as S from '../../model/session';
 import { formatTimer } from '../../model/trainer';
@@ -11,6 +11,9 @@ import { REVIEW_FOCUS_KEY } from '../sessions/SessionReviewCard';
 import { PlayPlayer } from './PlayPlayer';
 import { useBlockTimer } from './useBlockTimer';
 import { useWakeLock } from './useWakeLock';
+import { AttendanceCard } from '../sessions/AttendanceCard';
+import { useSquads } from '../teams/useSquads';
+import { Dialog } from '../../ui/Dialog';
 import './Training.css';
 
 /** Bloque en el que se quedó cada sesión, para seguir ahí si se recarga la página sin querer. */
@@ -31,6 +34,8 @@ export function TrainingMode({ id }: { id: string }) {
   const [missing, setMissing] = useState(false);
   const [index, setIndex] = useState(() => Math.max(0, Number(getItem(posKey(id))) || 0));
   const wake = useWakeLock();
+  const { squads } = useSquads();
+  const [roll, setRoll] = useState(false);
 
   useEffect(() => {
     Promise.all([getSession(id), listExercises()])
@@ -96,6 +101,14 @@ export function TrainingMode({ id }: { id: string }) {
       </div>
     );
 
+  const squad = squads?.find((t) => t.id === session.teamId);
+  /** Pasar lista desde aquí: cada marca se guarda al momento. */
+  const updateSession = (fn: (x: S.Session) => S.Session) => {
+    const next = { ...fn(session), updatedAt: Date.now() };
+    setSession(next);
+    void saveSession(next);
+  };
+  const marked = squad ? squad.players.filter((p) => session.attendance[p.id]).length : 0;
   const schedule = S.blockSchedule(session)[index];
   const b = current.block;
   const e = current.exercise;
@@ -115,6 +128,11 @@ export function TrainingMode({ id }: { id: string }) {
           </strong>
           <span>{schedule.clockFrom ? `${schedule.clockFrom}–${schedule.clockTo}` : session.title}</span>
         </div>
+        {squad && squad.players.length > 0 && (
+          <button className="btn roll-btn" onClick={() => setRoll(true)} title="Pasar lista">
+            Lista {marked}/{squad.players.length}
+          </button>
+        )}
         <span className={`wake ${wake}`} title={wake === 'on' ? 'La pantalla no se apagará' : 'La pantalla puede apagarse sola'}>
           {wake === 'on' ? 'Pantalla encendida' : wake === 'unsupported' ? 'La pantalla puede apagarse' : ''}
         </span>
@@ -202,6 +220,11 @@ export function TrainingMode({ id }: { id: string }) {
           </button>
         )}
       </footer>
+      {squad && (
+        <Dialog open={roll} onClose={() => setRoll(false)} title={`Pasar lista · ${squad.name}`}>
+          <AttendanceCard session={session} squad={squad} update={updateSession} />
+        </Dialog>
+      )}
       {over && (
         <div className="train-alert" role="alert">
           ¡Tiempo! {last ? 'Último bloque' : 'Pasa al siguiente'}

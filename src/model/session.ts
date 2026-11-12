@@ -58,6 +58,8 @@ export interface Session {
   template: boolean;
   /** Lo que se apunta después del entreno. */
   review: SessionReview;
+  /** Asistencia: id del jugador → cómo vino. Los que no aparecen, sin marcar. */
+  attendance: Record<string, AttendanceMark>;
   createdAt: number;
   updatedAt: number;
 }
@@ -71,13 +73,38 @@ export interface SessionReview {
 
 export const EMPTY_REVIEW: SessionReview = { done: false, rating: 0, notes: '' };
 
+/** Cómo ha venido cada jugador. «Tarde» cuenta como asistencia; «Justificada» es una falta avisada. */
+export type AttendanceMark = 'present' | 'late' | 'absent' | 'excused';
+export const ATTENDANCE_MARKS: { id: AttendanceMark; label: string }[] = [
+  { id: 'present', label: 'Viene' },
+  { id: 'late', label: 'Tarde' },
+  { id: 'absent', label: 'Falta' },
+  { id: 'excused', label: 'Justificada' },
+];
+const isMark = (v: unknown): v is AttendanceMark => ATTENDANCE_MARKS.some((m) => m.id === v);
+
+/** Marca (o desmarca, con null) la asistencia de un jugador. */
+export function setAttendance(s: Session, playerId: string, mark: AttendanceMark | null): Session {
+  const attendance = { ...s.attendance };
+  if (mark) attendance[playerId] = mark;
+  else delete attendance[playerId];
+  return { ...s, attendance };
+}
+
+/** «Todos vienen»: marca como presentes a los que aún no tienen marca. */
+export function markAllPresent(s: Session, playerIds: string[]): Session {
+  const attendance = { ...s.attendance };
+  for (const id of playerIds) attendance[id] ??= 'present';
+  return { ...s, attendance };
+}
+
 // ---------------------------------------------------------------------------
 // Crear y editar
 // ---------------------------------------------------------------------------
 
 export function newSession(title = 'Sesión nueva', date = '', teamId = ''): Session {
   const now = Date.now();
-  return { version: 1, id: uid(), title, date, startTime: '', teamId, team: '', goal: '', notes: '', blocks: [], template: false, review: { ...EMPTY_REVIEW }, createdAt: now, updatedAt: now };
+  return { version: 1, id: uid(), title, date, startTime: '', teamId, team: '', goal: '', notes: '', blocks: [], template: false, review: { ...EMPTY_REVIEW }, attendance: {}, createdAt: now, updatedAt: now };
 }
 
 /** Cambia lo de después del entreno. Escribir notas o valorar marca la sesión como hecha. */
@@ -92,7 +119,7 @@ export function updateReview(s: Session, patch: Partial<SessionReview>): Session
 /** Copia nueva con ids nuevos (también los de los bloques). */
 function copyOf(s: Session, patch: Partial<Session>): Session {
   const now = Date.now();
-  return { ...structuredClone(s), id: uid(), blocks: s.blocks.map((b) => ({ ...structuredClone(b), id: uid() })), review: { ...EMPTY_REVIEW }, createdAt: now, updatedAt: now, ...patch };
+  return { ...structuredClone(s), id: uid(), blocks: s.blocks.map((b) => ({ ...structuredClone(b), id: uid() })), review: { ...EMPTY_REVIEW }, attendance: {}, createdAt: now, updatedAt: now, ...patch };
 }
 
 /** Guarda una sesión como plantilla: la misma estructura, sin fecha ni notas del entreno. */
@@ -302,6 +329,13 @@ function parseBlock(raw: unknown): SessionBlock | null {
   return null;
 }
 
+function parseAttendance(raw: unknown): Record<string, AttendanceMark> {
+  const out: Record<string, AttendanceMark> = {};
+  if (!isObj(raw)) return out;
+  for (const [id, mark] of Object.entries(raw).slice(0, 100)) if (ID_RE.test(id) && isMark(mark)) out[id] = mark;
+  return out;
+}
+
 function parseReview(raw: unknown): SessionReview {
   if (!isObj(raw)) return { ...EMPTY_REVIEW };
   return { done: raw.done === true, rating: Math.max(0, Math.min(5, Math.round(num(raw.rating, 0)))), notes: text(raw.notes, SESSION_LIMITS.notes) };
@@ -332,6 +366,7 @@ export function parseSession(raw: unknown): Session | null {
     // las sesiones guardadas antes de existir plantillas y notas del entreno no los tienen
     template: raw.template === true,
     review: parseReview(raw.review),
+    attendance: parseAttendance(raw.attendance),
     createdAt: num(raw.createdAt, now),
     updatedAt: num(raw.updatedAt, now),
   };

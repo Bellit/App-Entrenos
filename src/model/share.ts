@@ -66,7 +66,7 @@ export function adoptShared(s: Shared): { exercises: Exercise[]; session?: Sessi
     return { ...b, id: uid(), exerciseId: ex.id, snapshot: structuredClone(ex) };
   });
   // el equipo es de quien lo compartió: en la app de quien lo recibe no existe
-  return { exercises: [...newIds.values()], session: { ...structuredClone(s.session), id: uid(), teamId: '', blocks, createdAt: now, updatedAt: now } };
+  return { exercises: [...newIds.values()], session: { ...structuredClone(s.session), id: uid(), teamId: '', attendance: {}, blocks, createdAt: now, updatedAt: now } };
 }
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';

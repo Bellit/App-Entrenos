@@ -7,6 +7,7 @@ import { ExercisePicker } from './ExercisePicker';
 import { SessionBlocks } from './SessionBlocks';
 import { useSessionDoc } from './useSessionDoc';
 import { SessionReviewCard } from './SessionReviewCard';
+import { AttendanceCard } from './AttendanceCard';
 import { useSquads } from '../teams/useSquads';
 import { squadLabel } from '../../model/squad';
 import { saveSession } from '../../data/db';
@@ -109,6 +110,9 @@ export function SessionEditor({ id }: { id: string }) {
   // ya entrenada (hoy o antes): lo de después del entreno va arriba; si es futura, abajo
   const reviewFirst = !s.template && !!s.date && s.date <= S.todayISO();
   const review = !s.template && <SessionReviewCard session={s} update={update} />;
+  // pasar lista: solo si la sesión es de un equipo
+  const squad = squads?.find((t) => t.id === s.teamId);
+  const attendance = !s.template && squad && <AttendanceCard session={s} squad={squad} update={update} />;
   /** Crea una sesión para hoy a partir de esta plantilla y la abre. */
   const startFromTemplate = async () => {
     const n = S.fromTemplate(s, S.todayISO());
@@ -142,6 +146,7 @@ export function SessionEditor({ id }: { id: string }) {
       <div className="sess-layout">
         <main className="sess-main">
           {reviewFirst && review}
+          {reviewFirst && attendance}
           {/* 2.4 · Cabecera de la sesión */}
           <section className="sess-card sess-fields" aria-label="Datos de la sesión">
             {!s.template && (
@@ -212,6 +217,7 @@ export function SessionEditor({ id }: { id: string }) {
           ) : (
             <SessionBlocks session={s} library={library} update={update} onRemove={remove} />
           )}
+          {!reviewFirst && attendance}
           {!reviewFirst && review}
           {d && <p className="sess-date-long muted">{d.long}</p>}
         </main>

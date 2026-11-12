@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as S from './session';
 import { newExercise } from './exercise';
 import { adoptShared, parseShared, sessionPayload } from './share';
-import { newSquad, parseSquad, SQUAD_COLORS, sortSquads, squadLabel } from './squad';
+import { addPlayers, attendanceStats, newSquad, parseSquad, removePlayer, SQUAD_COLORS, sortPlayers, sortSquads, squadLabel, updatePlayer } from './squad';
 
 describe('equipos', () => {
   it('cada equipo nuevo coge un color que no esté usado', () => {
@@ -63,5 +63,54 @@ describe('sesiones por equipo', () => {
     const s = S.addExerciseBlock(S.newSession('de A', '', a), e);
     const p = JSON.parse(JSON.stringify(sessionPayload(s, new Map([[e.id, e]]))));
     expect(adoptShared(parseShared(p.kind, p.data)!).session!.teamId).toBe('');
+  });
+});
+
+describe('jugadores y asistencia', () => {
+  it('añadir varios pegando una lista, con dorsal opcional y sin repetir', () => {
+    let t = newSquad('Cadete A');
+    t = addPlayers(t, '7 Marta\n12. Pau\n\nLucía\nmarta');
+    expect(t.players.map((p) => `${p.number}|${p.name}`)).toEqual(['7|Marta', '12|Pau', '|Lucía']);
+    expect(sortPlayers(t.players).map((p) => p.name)).toEqual(['Marta', 'Pau', 'Lucía']);
+  });
+
+  it('cambiar y quitar jugadores', () => {
+    let t = addPlayers(newSquad('A'), 'Pau');
+    const id = t.players[0].id;
+    t = updatePlayer(t, id, { number: '5' });
+    expect(t.players[0]).toMatchObject({ name: 'Pau', number: '5' });
+    expect(removePlayer(t, id).players).toEqual([]);
+  });
+
+  it('pasar lista: marcar, desmarcar y «todos vienen» sin pisar lo ya marcado', () => {
+    let s = S.newSession('Martes', '2026-11-17', 'eq');
+    s = S.setAttendance(s, 'p1', 'absent');
+    s = S.markAllPresent(s, ['p1', 'p2', 'p3']);
+    expect(s.attendance).toEqual({ p1: 'absent', p2: 'present', p3: 'present' });
+    expect(S.setAttendance(s, 'p2', null).attendance).toEqual({ p1: 'absent', p3: 'present' });
+  });
+
+  it('resumen: «tarde» cuenta como asistencia; solo sesiones del equipo con lista', () => {
+    const t = addPlayers({ ...newSquad('A'), id: 'eq' }, 'Marta\nPau');
+    const [m, p] = t.players.map((x) => x.id);
+    const ses = (att: Record<string, S.AttendanceMark>, teamId = 'eq') => ({ ...S.newSession('x', '2026-11-01', teamId), attendance: att });
+    const stats = attendanceStats(t, [
+      ses({ [m]: 'present', [p]: 'absent' }),
+      ses({ [m]: 'late', [p]: 'excused' }),
+      ses({ [m]: 'absent' }),
+      ses({ [m]: 'absent', [p]: 'absent' }, 'otro'), // de otro equipo: no cuenta
+    ]);
+    expect(stats.get(m)).toMatchObject({ present: 1, late: 1, absent: 1, total: 3, pct: 67 });
+    expect(stats.get(p)).toMatchObject({ absent: 1, excused: 1, total: 2, pct: 0 });
+  });
+
+  it('las plantillas y copias no arrastran la asistencia', () => {
+    const s = S.setAttendance(S.newSession('x', '2026-11-01', 'eq'), 'p1', 'present');
+    expect(S.toTemplate(s).attendance).toEqual({});
+    expect(S.duplicateSession(s).attendance).toEqual({});
+    const old = JSON.parse(JSON.stringify(s));
+    delete old.attendance;
+    expect(S.parseSession(old)!.attendance).toEqual({});
+    expect(S.parseSession({ ...old, attendance: { p1: 'present', p2: 'inventado' } })!.attendance).toEqual({ p1: 'present' });
   });
 });

@@ -377,3 +377,18 @@
     animation: none;
   }
 }
+
+/* pasar lista desde el modo entreno */
+.roll-btn {
+  min-height: 40px;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.roll-btn + .wake {
+  margin-left: 0;
+}
+dialog .attendance {
+  padding: 0;
+  border: 0;
+  background: none;
+}
