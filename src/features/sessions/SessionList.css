@@ -190,3 +190,62 @@
     transition: none;
   }
 }
+
+/* sesión hecha (después del entreno) */
+.session-done {
+  color: #86efac;
+  font-weight: 600;
+}
+.session-stars {
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+/* plantillas: sin fecha, con su propia etiqueta */
+.session-card.template .session-date {
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+.session-card.template .session-date .wd {
+  padding: 0 4px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* elegir cómo empezar una sesión nueva */
+.new-session {
+  display: grid;
+  gap: 10px;
+  min-width: min(420px, 80vw);
+}
+.new-session .btn {
+  justify-self: start;
+}
+.new-session p {
+  margin: 4px 0 0;
+}
+.new-session ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.template-pick {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.template-pick:hover {
+  border-color: var(--accent);
+}
+.template-pick small {
+  color: var(--muted);
+}

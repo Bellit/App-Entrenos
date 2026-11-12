@@ -51,9 +51,22 @@ export interface Session {
   goal: string;
   notes: string;
   blocks: SessionBlock[];
+  /** Plantilla: un modelo para crear sesiones (no tiene fecha ni sale entre las próximas o pasadas). */
+  template: boolean;
+  /** Lo que se apunta después del entreno. */
+  review: SessionReview;
   createdAt: number;
   updatedAt: number;
 }
+
+/** Después del entreno: si se hizo, cómo fue (1-5; 0 = sin valorar) y notas. */
+export interface SessionReview {
+  done: boolean;
+  rating: number;
+  notes: string;
+}
+
+export const EMPTY_REVIEW: SessionReview = { done: false, rating: 0, notes: '' };
 
 // ---------------------------------------------------------------------------
 // Crear y editar
@@ -61,8 +74,29 @@ export interface Session {
 
 export function newSession(title = 'Sesión nueva', date = ''): Session {
   const now = Date.now();
-  return { version: 1, id: uid(), title, date, startTime: '', team: '', goal: '', notes: '', blocks: [], createdAt: now, updatedAt: now };
+  return { version: 1, id: uid(), title, date, startTime: '', team: '', goal: '', notes: '', blocks: [], template: false, review: { ...EMPTY_REVIEW }, createdAt: now, updatedAt: now };
 }
+
+/** Cambia lo de después del entreno. Escribir notas o valorar marca la sesión como hecha. */
+export function updateReview(s: Session, patch: Partial<SessionReview>): Session {
+  const review = { ...s.review, ...patch };
+  review.rating = Math.max(0, Math.min(5, Math.round(review.rating)));
+  review.notes = review.notes.slice(0, SESSION_LIMITS.notes);
+  if (patch.done === undefined && (patch.rating || patch.notes?.trim())) review.done = true;
+  return { ...s, review };
+}
+
+/** Copia nueva con ids nuevos (también los de los bloques). */
+function copyOf(s: Session, patch: Partial<Session>): Session {
+  const now = Date.now();
+  return { ...structuredClone(s), id: uid(), blocks: s.blocks.map((b) => ({ ...structuredClone(b), id: uid() })), review: { ...EMPTY_REVIEW }, createdAt: now, updatedAt: now, ...patch };
+}
+
+/** Guarda una sesión como plantilla: la misma estructura, sin fecha ni notas del entreno. */
+export const toTemplate = (s: Session): Session => copyOf(s, { template: true, date: '' });
+
+/** Crea una sesión a partir de una plantilla, para la fecha indicada. */
+export const fromTemplate = (t: Session, date: string): Session => copyOf(t, { template: false, date });
 
 /** Minutos válidos: enteros entre 1 y 180. */
 export const clampMinutes = (m: number) => Math.min(SESSION_LIMITS.minutes, Math.max(1, Math.round(Number.isFinite(m) ? m : 10)));
@@ -213,18 +247,17 @@ export function dateParts(iso: string): { weekday: string; day: string; month: s
  */
 export function groupSessions(list: Session[], today: string) {
   const byDate = (a: Session, b: Session) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime);
+  const real = list.filter((s) => !s.template);
   return {
-    upcoming: list.filter((s) => s.date && s.date >= today).sort(byDate),
-    undated: list.filter((s) => !s.date).sort((a, b) => b.updatedAt - a.updatedAt),
-    past: list.filter((s) => s.date && s.date < today).sort((a, b) => byDate(b, a)),
+    upcoming: real.filter((s) => s.date && s.date >= today).sort(byDate),
+    undated: real.filter((s) => !s.date).sort((a, b) => b.updatedAt - a.updatedAt),
+    past: real.filter((s) => s.date && s.date < today).sort((a, b) => byDate(b, a)),
+    templates: list.filter((s) => s.template).sort((a, b) => a.title.localeCompare(b.title, 'es')),
   };
 }
 
-/** Copia de una sesión con id nuevo (para «Duplicar»): misma estructura, sin fecha. */
-export function duplicateSession(s: Session): Session {
-  const now = Date.now();
-  return { ...structuredClone(s), id: uid(), title: `${s.title} (copia)`.slice(0, SESSION_LIMITS.title), date: '', blocks: s.blocks.map((b) => ({ ...structuredClone(b), id: uid() })), createdAt: now, updatedAt: now };
-}
+/** Copia de una sesión con id nuevo (para «Duplicar»): misma estructura, sin fecha ni notas del entreno. */
+export const duplicateSession = (s: Session): Session => copyOf(s, { title: `${s.title} (copia)`.slice(0, SESSION_LIMITS.title), date: '' });
 
 // ---------------------------------------------------------------------------
 // Leer datos de fuera (base de datos o archivo)
@@ -256,6 +289,11 @@ function parseBlock(raw: unknown): SessionBlock | null {
   return null;
 }
 
+function parseReview(raw: unknown): SessionReview {
+  if (!isObj(raw)) return { ...EMPTY_REVIEW };
+  return { done: raw.done === true, rating: Math.max(0, Math.min(5, Math.round(num(raw.rating, 0)))), notes: text(raw.notes, SESSION_LIMITS.notes) };
+}
+
 /**
  * Convierte datos de fuera en una sesión válida, o `null` si no se puede salvar.
  * Lo que está mal se repara o se descarta (un bloque roto se quita, una fecha imposible se vacía).
@@ -277,6 +315,9 @@ export function parseSession(raw: unknown): Session | null {
     goal: text(raw.goal, SESSION_LIMITS.goal),
     notes: text(raw.notes, SESSION_LIMITS.notes),
     blocks,
+    // las sesiones guardadas antes de existir plantillas y notas del entreno no los tienen
+    template: raw.template === true,
+    review: parseReview(raw.review),
     createdAt: num(raw.createdAt, now),
     updatedAt: num(raw.updatedAt, now),
   };

@@ -7,6 +7,7 @@ import { formatTimer } from '../../model/trainer';
 import { getItem, setItem } from '../../prefs';
 import { IconNext, IconPause, IconPlay, IconPrev, IconUndo } from '../../ui/Icons';
 import { NotesText } from './NotesText';
+import { REVIEW_FOCUS_KEY } from '../sessions/SessionReviewCard';
 import { PlayPlayer } from './PlayPlayer';
 import { useBlockTimer } from './useBlockTimer';
 import { useWakeLock } from './useWakeLock';
@@ -181,7 +182,18 @@ export function TrainingMode({ id }: { id: string }) {
         </div>
 
         {last ? (
-          <a className="btn big nav primary" href={routeHref.session(id)}>
+          <a
+            className="btn big nav primary"
+            href={routeHref.session(id)}
+            onClick={() => {
+              // al llegar a la sesión, se abre directamente «Después del entreno» para apuntar cómo ha ido
+              try {
+                sessionStorage.setItem(REVIEW_FOCUS_KEY, id);
+              } catch {
+                /* sin almacenamiento: se llega a la sesión igual */
+              }
+            }}
+          >
             <span className="nav-text">Terminar</span> ✓
           </a>
         ) : (

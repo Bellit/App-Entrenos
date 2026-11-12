@@ -152,6 +152,65 @@ describe('sesión: lista', () => {
   });
 });
 
+describe('sesión: después del entreno', () => {
+  it('valorar o escribir notas la marca como hecha', () => {
+    const s = S.newSession();
+    expect(s.review).toEqual({ done: false, rating: 0, notes: '' });
+    expect(S.updateReview(s, { rating: 4 }).review).toEqual({ done: true, rating: 4, notes: '' });
+    expect(S.updateReview(s, { notes: 'El 2c2 salió muy bien' }).review.done).toBe(true);
+    expect(S.updateReview(s, { notes: '   ' }).review.done).toBe(false);
+  });
+  it('la valoración se queda entre 0 y 5', () => {
+    expect(S.updateReview(S.newSession(), { rating: 9 }).review.rating).toBe(5);
+    expect(S.updateReview(S.newSession(), { rating: -2 }).review.rating).toBe(0);
+  });
+  it('se puede desmarcar como hecha', () => {
+    const s = S.updateReview(S.newSession(), { rating: 3 });
+    expect(S.updateReview(s, { done: false }).review.done).toBe(false);
+  });
+});
+
+describe('sesión: plantillas', () => {
+  const base = () => {
+    let s = { ...S.newSession('Martes tipo', '2026-11-17'), startTime: '18:30', goal: 'Bloqueo directo' };
+    s = S.addTextBlock(s, 'Movilidad', 10);
+    return S.updateReview(s, { rating: 5, notes: 'bien' });
+  };
+  it('guardar como plantilla: misma estructura, sin fecha ni notas del entreno, ids nuevos', () => {
+    const s = base();
+    const t = S.toTemplate(s);
+    expect(t.template).toBe(true);
+    expect(t.date).toBe('');
+    expect(t.review.done).toBe(false);
+    expect(t.goal).toBe('Bloqueo directo');
+    expect(t.id).not.toBe(s.id);
+    expect(t.blocks[0].id).not.toBe(s.blocks[0].id);
+  });
+  it('crear desde una plantilla: sesión normal con la fecha indicada', () => {
+    const t = S.toTemplate(base());
+    const s = S.fromTemplate(t, '2026-11-24');
+    expect(s.template).toBe(false);
+    expect(s.date).toBe('2026-11-24');
+    expect(s.blocks).toHaveLength(1);
+    expect(s.id).not.toBe(t.id);
+  });
+  it('las plantillas van aparte en la lista', () => {
+    const t = S.toTemplate(base());
+    const g = S.groupSessions([base(), t], '2026-11-01');
+    expect(g.upcoming).toHaveLength(1);
+    expect(g.undated).toHaveLength(0); // la plantilla no tiene fecha, pero no sale aquí
+    expect(g.templates.map((x) => x.id)).toEqual([t.id]);
+  });
+  it('las sesiones guardadas antes se leen sin plantilla ni notas', () => {
+    const old = JSON.parse(JSON.stringify(S.newSession()));
+    delete old.template;
+    delete old.review;
+    const s = S.parseSession(old)!;
+    expect(s.template).toBe(false);
+    expect(s.review).toEqual({ done: false, rating: 0, notes: '' });
+  });
+});
+
 describe('sesión: leer datos de fuera', () => {
   it('una sesión guardada se lee igual', () => {
     let s = { ...S.newSession('Jueves', '2026-11-19'), startTime: '19:00', team: 'Cadete A', goal: 'Bloqueo directo' };

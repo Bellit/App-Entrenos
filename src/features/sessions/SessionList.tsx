@@ -4,7 +4,8 @@ import { deleteSession, listExercises, listSessions, saveSession, onRemoteChange
 import { categoryName } from '../../model/exercise';
 import * as S from '../../model/session';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDuplicate, IconMore, IconPlay, IconPlus, IconShare, IconTrash } from '../../ui/Icons';
+import { IconDuplicate, IconFile, IconMore, IconPlay, IconPlus, IconShare, IconTrash } from '../../ui/Icons';
+import { Dialog } from '../../ui/Dialog';
 import { sessionPayload } from '../../model/share';
 import { ShareDialog } from '../../sync/ShareDialog';
 import { Menu } from '../../ui/Menu';
@@ -13,16 +14,18 @@ import { useDataTools } from '../data/useDataTools';
 import './SessionList.css';
 
 /** Una sesión en la lista: la fecha bien visible a la izquierda, y título, horario y bloques. */
-function SessionCard({ s, today, onDuplicate, onDelete, onShare }: { s: S.Session; today: string; onDuplicate: () => void; onDelete: () => void; onShare: () => void }) {
+function SessionCard({ s, today, onDuplicate, onDelete, onShare, onTemplate, onUse }: { s: S.Session; today: string; onDuplicate: () => void; onDelete: () => void; onShare: () => void; onTemplate: () => void; onUse: () => void }) {
   const d = S.dateParts(s.date);
   const total = S.totalMinutes(s);
   const end = S.endTime(s);
   const isToday = s.date === today;
   return (
-    <li className={`session-card${isToday ? ' today' : ''}`}>
+    <li className={`session-card${isToday && !s.template ? ' today' : ''}${s.template ? ' template' : ''}`}>
       <a className="session-link" href={routeHref.session(s.id)} aria-label={`Abrir ${s.title}${d ? `, ${d.long}` : ''}`}>
         <div className={`session-date${d ? '' : ' none'}`} aria-hidden="true">
-          {d ? (
+          {s.template ? (
+            <span className="wd">plantilla</span>
+          ) : d ? (
             <>
               <span className="wd">{isToday ? 'hoy' : d.weekday}</span>
               <span className="dd">{d.day}</span>
@@ -39,6 +42,11 @@ function SessionCard({ s, today, onDuplicate, onDelete, onShare }: { s: S.Sessio
             {s.startTime && <span>{end ? `${s.startTime}–${end}` : s.startTime}</span>}
             <span>{total ? S.formatDuration(total) : 'Sin bloques'}</span>
             {s.blocks.length > 0 && <span>{s.blocks.length === 1 ? '1 bloque' : `${s.blocks.length} bloques`}</span>}
+            {s.review.done && (
+              <span className="session-done">
+                ✓ Hecha{s.review.rating > 0 && <span className="session-stars" aria-label={`${s.review.rating} de 5`}>{' ' + '★'.repeat(s.review.rating)}</span>}
+              </span>
+            )}
           </p>
           {s.goal && <p className="session-goal">{s.goal}</p>}
           {s.blocks.length > 0 && (
@@ -60,8 +68,10 @@ function SessionCard({ s, today, onDuplicate, onDelete, onShare }: { s: S.Sessio
           label={`Más acciones de ${s.title}`}
           icon={<IconMore />}
           items={[
-            ...(s.blocks.length ? [{ label: 'Entrenar', hint: 'Seguirla pantalla a pantalla', icon: <IconPlay />, onSelect: () => navigate(routeHref.training(s.id)) }] : []),
+            ...(s.template ? [{ label: 'Usar plantilla', hint: 'Crear una sesión para hoy con ella', icon: <IconPlus />, onSelect: onUse }] : []),
+            ...(s.blocks.length && !s.template ? [{ label: 'Entrenar', hint: 'Seguirla pantalla a pantalla', icon: <IconPlay />, onSelect: () => navigate(routeHref.training(s.id)) }] : []),
             { label: 'Compartir', hint: 'Por WhatsApp o con otro entrenador', icon: <IconShare />, onSelect: onShare },
+            ...(!s.template ? [{ label: 'Guardar como plantilla', hint: 'Para crear sesiones parecidas', icon: <IconFile />, onSelect: onTemplate }] : []),
             { label: 'Duplicar', hint: 'Misma estructura, sin fecha', icon: <IconDuplicate />, onSelect: onDuplicate },
             { label: 'Eliminar', icon: <IconTrash />, onSelect: onDelete },
           ]}
@@ -78,6 +88,8 @@ export function SessionList() {
   const [error, setError] = useState(false);
   const [toDelete, setToDelete] = useState<S.Session | null>(null);
   const [toShare, setToShare] = useState<S.Session | null>(null);
+  const [choosing, setChoosing] = useState(false);
+  const [notice, setNotice] = useState('');
   const today = S.todayISO();
 
   const refresh = () => {
@@ -98,12 +110,23 @@ export function SessionList() {
 
   const groups = useMemo(() => S.groupSessions(list ?? [], today), [list, today]);
 
-  const create = guarded('crear la sesión', async () => {
-    protect();
-    const s = S.newSession('Sesión nueva', today);
-    await saveSession(s);
-    navigate(routeHref.session(s.id));
-  });
+  /** Nueva sesión: en blanco o, si se elige, a partir de una plantilla. */
+  const createFrom = (template: S.Session | null) =>
+    guarded('crear la sesión', async () => {
+      protect();
+      setChoosing(false);
+      const s = template ? S.fromTemplate(template, today) : S.newSession('Sesión nueva', today);
+      await saveSession(s);
+      navigate(routeHref.session(s.id));
+    })();
+  // con plantillas, primero se elige cómo empezar; sin ellas, directamente en blanco
+  const create = () => (groups.templates.length ? setChoosing(true) : createFrom(null));
+  const saveTemplate = (s: S.Session) =>
+    guarded('guardar la plantilla', async () => {
+      await saveSession(S.toTemplate(s));
+      setNotice(`«${s.title}» guardada como plantilla. La tienes abajo, en «Plantillas».`);
+      refresh();
+    })();
   const duplicate = (s: S.Session) =>
     guarded('duplicar la sesión', async () => {
       await saveSession(S.duplicateSession(s));
@@ -124,7 +147,7 @@ export function SessionList() {
         </h2>
         <ul className="session-cards">
           {items.map((s) => (
-            <SessionCard key={s.id} s={s} today={today} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} />
+            <SessionCard key={s.id} s={s} today={today} onDuplicate={() => duplicate(s)} onDelete={() => setToDelete(s)} onShare={() => setToShare(s)} onTemplate={() => saveTemplate(s)} onUse={() => createFrom(s)} />
           ))}
         </ul>
       </section>
@@ -148,10 +171,26 @@ export function SessionList() {
       <main className="page-main">
         <div className="page-title">
           <h1>Sesiones</h1>
-          {list && list.length > 0 && <p className="muted">{list.length === 1 ? '1 sesión' : `${list.length} sesiones`}</p>}
+          {list && list.length > 0 && (
+            <p className="muted">
+              {(() => {
+                const n = list.length - groups.templates.length;
+                return n === 1 ? '1 sesión' : `${n} sesiones`;
+              })()}
+              {groups.templates.length > 0 && ` · ${groups.templates.length === 1 ? '1 plantilla' : `${groups.templates.length} plantillas`}`}
+            </p>
+          )}
         </div>
 
         {data.notices}
+        {notice && (
+          <p className="notice ok" role="status">
+            {notice}{' '}
+            <button className="link" onClick={() => setNotice('')}>
+              Cerrar
+            </button>
+          </p>
+        )}
 
         {error && (
           <p className="notice error" role="alert">
@@ -187,6 +226,7 @@ export function SessionList() {
         {section('Próximas', groups.upcoming)}
         {section('Sin fecha', groups.undated)}
         {section('Pasadas', groups.past)}
+        {section('Plantillas', groups.templates)}
       </main>
 
       <ShareDialog
@@ -195,6 +235,28 @@ export function SessionList() {
         what="Sesión"
         build={async () => sessionPayload(toShare!, new Map((await listExercises()).map((e) => [e.id, e])))}
       />
+
+      <Dialog open={choosing} onClose={() => setChoosing(false)} title="Nueva sesión">
+        <div className="new-session">
+          <button className="btn big primary" onClick={() => createFrom(null)}>
+            <IconPlus /> En blanco
+          </button>
+          <p className="muted">O a partir de una plantilla:</p>
+          <ul>
+            {groups.templates.map((t) => (
+              <li key={t.id}>
+                <button className="template-pick" onClick={() => createFrom(t)}>
+                  <strong>{t.title || 'Plantilla'}</strong>
+                  <small>
+                    {t.blocks.length} bloques · {S.formatDuration(S.totalMinutes(t))}
+                    {t.team ? ` · ${t.team}` : ''}
+                  </small>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Dialog>
 
       {toDelete && (
         <ConfirmDialog

@@ -600,3 +600,78 @@
     bottom: calc(84px + env(safe-area-inset-bottom));
   }
 }
+
+/* ---------- Después del entreno ---------- */
+
+.review {
+  display: grid;
+  gap: 12px;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.review.done {
+  border-color: #245b3a;
+}
+.review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.review-head h2 {
+  font-size: 22px;
+}
+.review-done {
+  font-weight: 600;
+}
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.stars-label {
+  margin-right: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.star {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--panel-2);
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-text-stroke: 1px var(--border);
+}
+.star.on {
+  color: var(--accent);
+  -webkit-text-stroke: 0;
+}
+.star:hover {
+  transform: scale(1.1);
+}
+.review textarea {
+  font-size: 15px;
+}
+
+/* ---------- Plantilla ---------- */
+
+.template-badge {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star:hover {
+    transform: none;
+  }
+}

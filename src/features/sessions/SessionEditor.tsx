@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { routeHref } from '../../app/useRoute';
+import { navigate, routeHref } from '../../app/useRoute';
 import * as S from '../../model/session';
 import { IconPlay, IconPlus, IconPrev } from '../../ui/Icons';
 import { SaveIndicator } from '../../ui/SaveState';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionBlocks } from './SessionBlocks';
 import { useSessionDoc } from './useSessionDoc';
+import { SessionReviewCard } from './SessionReviewCard';
+import { saveSession } from '../../data/db';
 import '../../ui/Page.css';
 import './SessionEditor.css';
 
@@ -101,6 +103,15 @@ export function SessionEditor({ id }: { id: string }) {
   const total = S.totalMinutes(s);
   const end = S.endTime(s);
   const d = S.dateParts(s.date);
+  // ya entrenada (hoy o antes): lo de después del entreno va arriba; si es futura, abajo
+  const reviewFirst = !s.template && !!s.date && s.date <= S.todayISO();
+  const review = !s.template && <SessionReviewCard session={s} update={update} />;
+  /** Crea una sesión para hoy a partir de esta plantilla y la abre. */
+  const startFromTemplate = async () => {
+    const n = S.fromTemplate(s, S.todayISO());
+    await saveSession(n);
+    navigate(routeHref.session(n.id));
+  };
 
   return (
     <div className={`page session-editor${picking ? ' picking' : ''}`}>
@@ -110,9 +121,14 @@ export function SessionEditor({ id }: { id: string }) {
         </a>
         <h1 className="sr-only">Sesión: {s.title || 'sin título'}</h1>
         <input className="sess-title" value={s.title} maxLength={S.SESSION_LIMITS.title} onChange={(e) => field('title')(e.target.value)} aria-label="Título de la sesión" placeholder="Título de la sesión" />
+        {s.template && <span className="template-badge">Plantilla</span>}
         <div className="head-actions">
           <SaveIndicator state={saveState} onRetry={retry} />
-          {s.blocks.length > 0 && (
+          {s.template ? (
+            <button className="btn primary big" onClick={() => void startFromTemplate()} title="Crear una sesión para hoy con esta plantilla">
+              <IconPlus /> <span className="train-text">Usar plantilla</span>
+            </button>
+          ) : s.blocks.length > 0 && (
             <a className="btn primary big train-btn" href={routeHref.training(s.id)} title="Seguir la sesión pantalla a pantalla">
               <IconPlay /> <span className="train-text">Entrenar</span>
             </a>
@@ -122,12 +138,15 @@ export function SessionEditor({ id }: { id: string }) {
 
       <div className="sess-layout">
         <main className="sess-main">
+          {reviewFirst && review}
           {/* 2.4 · Cabecera de la sesión */}
           <section className="sess-card sess-fields" aria-label="Datos de la sesión">
-            <label className="field">
-              <span>Fecha</span>
-              <input type="date" value={s.date} onChange={(e) => field('date')(e.target.value)} />
-            </label>
+            {!s.template && (
+              <label className="field">
+                <span>Fecha</span>
+                <input type="date" value={s.date} onChange={(e) => field('date')(e.target.value)} />
+              </label>
+            )}
             <label className="field">
               <span>Hora de inicio</span>
               <input type="time" value={s.startTime} onChange={(e) => field('startTime')(e.target.value)} />
@@ -181,6 +200,7 @@ export function SessionEditor({ id }: { id: string }) {
           ) : (
             <SessionBlocks session={s} library={library} update={update} onRemove={remove} />
           )}
+          {!reviewFirst && review}
           {d && <p className="sess-date-long muted">{d.long}</p>}
         </main>
 
