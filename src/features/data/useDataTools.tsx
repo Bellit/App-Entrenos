@@ -7,7 +7,7 @@ import { getItem, setItem } from '../../prefs';
 import { IconDownload, IconMore, IconPlus, IconShare, IconUpload } from '../../ui/Icons';
 import { navigate, routeHref } from '../../app/useRoute';
 import { installApp, usePwa } from '../../pwa/pwa';
-import { Menu } from '../../ui/Menu';
+import { Menu, type MenuItem } from '../../ui/Menu';
 import { useSync } from '../../sync/sync';
 
 /** Hasta cuándo no se vuelve a mostrar el aviso de copia de seguridad (preferencia de este navegador). */
@@ -26,7 +26,7 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many.r
  * `hasData`: si ya hay algo guardado (para el aviso y para poder descargar la copia).
  * `onChanged`: se llama tras importar, para que la página vuelva a leer su lista.
  */
-export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChanged: () => void }) {
+export function useDataTools({ hasData, onChanged, extraItems = [] }: { hasData: boolean; onChanged: () => void; /** Opciones propias de la página, al final del menú. */ extraItems?: MenuItem[] }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [storage, setStorage] = useState<StorageState>('unknown');
   const [backupLater, setBackupLater] = useState(() => Number(getItem(BACKUP_LATER_KEY)) > Date.now());
@@ -102,6 +102,7 @@ export function useDataTools({ hasData, onChanged }: { hasData: boolean; onChang
         { label: 'Descargar copia de seguridad', hint: 'Ejercicios y sesiones en un archivo', icon: <IconDownload />, onSelect: downloadBackup, disabled: !hasData },
         { label: 'Compartidos', hint: 'Conmigo y lo que he compartido', icon: <IconShare />, onSelect: () => navigate(routeHref.inbox) },
         ...(pwa.canInstall ? [{ label: 'Instalar la app', hint: 'En la pantalla de inicio, y funciona sin conexión', icon: <IconPlus />, onSelect: () => void installApp() }] : []),
+        ...extraItems,
       ]}
     />
   );

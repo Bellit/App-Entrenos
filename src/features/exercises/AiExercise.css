@@ -1,0 +1,84 @@
+/* «Crear con IA» (beta): dos pasos, copiar instrucciones y pegar la respuesta */
+
+.ai-dialog {
+  display: grid;
+  gap: 14px;
+}
+.ai-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.ai-intro .badge-beta {
+  margin-right: 4px;
+}
+.ai-step {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.ai-step h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 17px;
+}
+.ai-n {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--accent);
+  font-size: 14px;
+}
+.ai-step textarea {
+  width: 100%;
+  resize: vertical;
+}
+.ai-step p {
+  margin: 0;
+}
+.ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ai-raw summary {
+  cursor: pointer;
+  color: var(--danger);
+  font-size: 13px;
+}
+.ai-raw textarea {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.ai-result {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #245b3a;
+  border-radius: 10px;
+}
+.ai-result ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ai-step .notice {
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .ai-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+  }
+}

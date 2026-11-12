@@ -1,5 +1,12 @@
 const base = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
 
+/** Destellos: crear con IA. */
+export const IconSparkle = () => (
+  <svg {...base}>
+    <path d="M10 3l1.8 4.7L16.5 9.5l-4.7 1.8L10 16l-1.8-4.7L3.5 9.5l4.7-1.8z" />
+    <path d="M18 14l.9 2.1 2.1.9-2.1.9L18 20l-.9-2.1-2.1-.9 2.1-.9z" />
+  </svg>
+);
 export const IconSelect = () => (
   <svg {...base}>
     <path d="M5 3l14 7-6 2-2 6z" fill="currentColor" fillOpacity={0.15} />

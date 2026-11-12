@@ -8,6 +8,8 @@ export interface MenuItem {
   icon?: ReactNode;
   onSelect: () => void;
   disabled?: boolean;
+  /** Etiqueta pequeña junto al nombre, p. ej. «Beta». */
+  badge?: string;
 }
 
 /**
@@ -114,7 +116,13 @@ export function Menu({
             >
               {it.icon}
               <span>
-                {it.label}
+                {it.badge ? (
+                  <span className="menu-label">
+                    {it.label} <em className="badge-beta">{it.badge}</em>
+                  </span>
+                ) : (
+                  it.label
+                )}
                 {it.hint && <small>{it.hint}</small>}
               </span>
             </button>

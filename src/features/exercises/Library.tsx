@@ -8,7 +8,9 @@ import { PageHeader } from '../../ui/PageHeader';
 import { PageFooter } from '../../ui/PageFooter';
 import { useDataTools } from '../data/useDataTools';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { IconDuplicate, IconMore, IconPlus, IconSearch, IconShare, IconTrash } from '../../ui/Icons';
+import { IconDuplicate, IconMore, IconPlus, IconSearch, IconShare, IconSparkle, IconTrash } from '../../ui/Icons';
+import type { AiResult } from '../../model/aiExercise';
+import { AiExerciseDialog } from './AiExerciseDialog';
 import { exercisePayload } from '../../model/share';
 import { ShareDialog } from '../../sync/ShareDialog';
 import { Menu } from '../../ui/Menu';
@@ -34,8 +36,21 @@ export function Library() {
     // cuando llegan cambios de la nube (otro dispositivo), se vuelve a leer la lista
     return onRemoteChange(refresh);
   }, []);
-  const data = useDataTools({ hasData: !!list?.length, onChanged: refresh });
+  const [aiOpen, setAiOpen] = useState(false);
+  // «Crear con IA» es BETA: va al final del menú ⋯, sin botón propio, hasta ver si se usa
+  const data = useDataTools({
+    hasData: !!list?.length,
+    onChanged: refresh,
+    extraItems: [{ label: 'Crear con IA', badge: 'Beta', hint: 'Describe el ejercicio y una IA lo dibuja', icon: <IconSparkle />, onSelect: () => setAiOpen(true) }],
+  });
   const { guarded, protect } = data;
+  const createFromAi = (r: AiResult) =>
+    guarded('crear el ejercicio', async () => {
+      protect();
+      await saveExercise(r.exercise);
+      setAiOpen(false);
+      navigate(routeHref.exercise(r.exercise.id));
+    })();
 
   const allTags = useMemo(() => [...new Set((list ?? []).flatMap((e) => e.tags))].sort(), [list]);
   const shown = (list ?? []).filter((e) => matchesFilters(e, query, category, tag));
@@ -74,6 +89,7 @@ export function Library() {
         }
       />
       {data.fileInputEl}
+      <AiExerciseDialog open={aiOpen} onClose={() => setAiOpen(false)} onCreate={createFromAi} />
 
       <main className="page-main">
         <div className="page-title">

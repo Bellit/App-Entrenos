@@ -47,10 +47,27 @@
   flex: none;
   color: var(--muted);
 }
-.menu-item span {
+.menu-item > span {
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+.menu-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* etiqueta de función en pruebas: pequeña y discreta */
+.badge-beta {
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .menu-item small {
   color: var(--muted);
